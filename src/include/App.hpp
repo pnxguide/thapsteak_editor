@@ -19,8 +19,12 @@ class App : public wxApp {
 wxIMPLEMENT_APP(App);
 
 class MyFrame : public wxFrame {
+    RenderTimer *timer;
+    Canvas *drawPane;
+
    public:
     MyFrame();
+    ~MyFrame();
     void OnClose(wxCloseEvent &evt);
 
     DECLARE_EVENT_TABLE()

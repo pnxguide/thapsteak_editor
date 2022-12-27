@@ -7,8 +7,11 @@ class Notechart {
     bool is_updated();
     void modify();
     void update();
+    void add_note(Note note);
+
+    std::vector<Note> notes;
+
 
    private:
-    std::vector<Note> notes;
     bool updated{false};
 };

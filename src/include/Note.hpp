@@ -8,19 +8,19 @@ enum Direction {
 };
 enum Side { SIDE_NONE, SIDE_LEFT, SIDE_RIGHT };
 enum Lane {
-    LANE_BPM,
-    LANE_H1,
-    LANE_H2,
-    LANE_H3,
-    LANE_H4,
-    LANE_H5,
-    LANE_N1,
-    LANE_N2,
-    LANE_N3,
-    LANE_N4,
-    LANE_E1,
-    LANE_E2,
-    LANE_E3
+    LANE_BPM = 1,
+    LANE_H1 = 3,
+    LANE_H2 = 4,
+    LANE_H3 = 5,
+    LANE_H4 = 6,
+    LANE_H5 = 7,
+    LANE_N1 = 9,
+    LANE_N2 = 10,
+    LANE_N3 = 11,
+    LANE_N4 = 12,
+    LANE_E1 = 14,
+    LANE_E2 = 15,
+    LANE_E3 = 16
 };
 
 class Note {
@@ -30,4 +30,6 @@ class Note {
     Direction direction{DIR_NONE};
     Side side{SIDE_NONE};
     bool is_longnote{false};
+
+    Note(long _tick, Lane _lane, Direction _direction, Side _side, bool _is_longnote);
 };

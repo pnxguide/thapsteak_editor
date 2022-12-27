@@ -5,37 +5,9 @@ EVT_CLOSE(MyFrame::OnClose)
 END_EVENT_TABLE()
 
 bool App::OnInit() {
-    render_loop_on = false;
-
-    wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     frame = new MyFrame();
-
-    drawPane = new Canvas(frame);
-    sizer->Add(drawPane, 1, wxEXPAND);
-
-    frame->SetSizer(sizer);
     frame->Show();
-
-    activateRenderLoop(true);
     return true;
-}
-
-void App::activateRenderLoop(bool on) {
-    if (on && !render_loop_on) {
-        Connect(wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(App::onIdle));
-        render_loop_on = true;
-    } else if (!on && render_loop_on) {
-        Disconnect(wxEVT_IDLE, wxIdleEventHandler(App::onIdle));
-        render_loop_on = false;
-    }
-}
-
-void App::onIdle(wxIdleEvent &evt) {
-    if (render_loop_on) {
-        drawPane->paintNow();
-        evt.RequestMore();  // render continuously, not only
-                            // once on idle
-    }
 }
 
 MyFrame::MyFrame()
@@ -54,6 +26,19 @@ MyFrame::MyFrame()
 
     Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
+
+    wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
+    drawPane = new Canvas(this);
+    sizer->Add(drawPane, 1, wxEXPAND);
+    SetSizer(sizer);
+
+    timer = new RenderTimer(drawPane);
+    Show();
+    timer->start();
+}
+
+MyFrame::~MyFrame() {
+    delete timer;
 }
 
 void MyFrame::OnExit(wxCommandEvent &event) { Close(true); }
@@ -64,6 +49,6 @@ void MyFrame::OnAbout(wxCommandEvent &event) {
 }
 
 void MyFrame::OnClose(wxCloseEvent &evt) {
-    wxGetApp().activateRenderLoop(false);
+    timer->Stop();
     evt.Skip();
 }
