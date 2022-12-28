@@ -43,9 +43,8 @@ MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Thapsteak Notecharter", wxPoint(50
     SetMenuBar(menuBar);
 
     CreateStatusBar();
-    SetStatusText("Welcome to wxWidgets!");
+    SetStatusText("v.0.1 (pre-alpha) | Created by pnx (for Thapsteak)");
 
-    Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
     Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
 
     wxBoxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -61,10 +60,6 @@ MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Thapsteak Notecharter", wxPoint(50
 MyFrame::~MyFrame() { delete timer; }
 
 void MyFrame::OnExit(wxCommandEvent &event) { Close(true); }
-
-void MyFrame::OnAbout(wxCommandEvent &event) {
-    wxMessageBox("This is a wxWidgets Hello World example", "About Hello World", wxOK | wxICON_INFORMATION);
-}
 
 void MyFrame::OnClose(wxCloseEvent &evt) {
     timer->Stop();

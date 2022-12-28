@@ -28,7 +28,5 @@ class MyFrame : public wxFrame {
     DECLARE_EVENT_TABLE()
 
    private:
-    void OnHello(wxCommandEvent &event);
     void OnExit(wxCommandEvent &event);
-    void OnAbout(wxCommandEvent &event);
 };
