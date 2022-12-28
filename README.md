@@ -4,7 +4,7 @@
 <img src="/img/Screenshot.png" />
 
 ## Executing the program
-```cpp
+```
 mkdir build
 cd build
 cmake ..

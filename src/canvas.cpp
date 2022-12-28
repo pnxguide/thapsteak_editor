@@ -25,14 +25,6 @@ std::vector<int> drawable_x_cells = {1, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16
 
 Canvas::Canvas(wxFrame *parent) : wxPanel(parent) {
     this->chart = std::make_unique<Notechart>();
-    this->chart->modify();
-
-    this->chart->add_note(Note(0, LANE_H1, DIR_NONE, SIDE_NONE, false));
-    this->chart->add_note(Note(0, LANE_H3, DIR_NONE, SIDE_RIGHT, false));
-    this->chart->add_note(Note(16, LANE_H5, DIR_NONE, SIDE_RIGHT, true));
-    this->chart->add_note(Note(0, LANE_N1, DIR_NONE, SIDE_LEFT, false));
-    this->chart->add_note(Note(16, LANE_N1, DIR_NONE, SIDE_LEFT, true));
-    this->chart->add_note(Note(0, LANE_E1, DIR_UP, SIDE_NONE, false));
 }
 
 void Canvas::mouseMove(wxMouseEvent &event) {
