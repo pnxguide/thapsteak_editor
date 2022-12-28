@@ -6,12 +6,11 @@
 #include <iostream>
 #include <memory>
 
-#include "../include/note.hpp"
+#include "../include/notechart.hpp"
+#include "../include/rendertimer.hpp"
 
 class Canvas;
 class MyFrame;
-class Notechart;
-class RenderTimer;
 
 enum Mode {
     MODE_POINTER,
@@ -85,28 +84,6 @@ class Canvas : public wxPanel {
     std::chrono::time_point<std::chrono::steady_clock> latest_update_time;
 
     DECLARE_EVENT_TABLE()
-};
-
-class RenderTimer : public wxTimer {
-    Canvas *pane;
-
-   public:
-    RenderTimer(Canvas *pane);
-    void Notify();
-    void start();
-};
-
-class Notechart {
-   public:
-    bool is_updated();
-    void modify();
-    void update();
-    void add_note(Note note);
-
-    std::vector<Note> notes;
-
-   private:
-    bool updated{false};
 };
 
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
@@ -416,28 +393,5 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                          //     ((height - (cell_height - ((current_tick % (192 / TICK_GRANULARITY)) * ROW_SIZE))) %
                          //      cell_height),
                          COL_SIZE + 1, ROW_SIZE * 6);
-    }
-}
-
-Note::Note(long _tick, Lane _lane, Direction _direction, Side _side, bool _is_longnote)
-    : tick(_tick), lane(_lane), direction(_direction), side(_side), is_longnote(_is_longnote) {}
-
-bool Notechart::is_updated() { return this->updated; }
-
-void Notechart::update() { this->updated = false; }
-
-void Notechart::modify() { this->updated = true; }
-
-void Notechart::add_note(Note note) {
-    if (std::find_if(this->notes.begin(), this->notes.end(), [note](const Note &n) {
-            return (n.tick == note.tick) && (n.lane == note.lane);
-        }) == this->notes.end()) {
-        // Mark as modified
-        this->modify();
-
-        // Add and organize new note
-        this->notes.push_back(note);
-        std::sort(this->notes.begin(), this->notes.end(),
-                  [](const Note &lhs, const Note &rhs) { return lhs.tick < rhs.tick; });
     }
 }

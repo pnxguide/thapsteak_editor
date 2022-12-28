@@ -12,7 +12,7 @@ include(${wxWidgets_USE_FILE})
 
 find_package(fmt)
 
-add_executable(app src/app.cpp)
+add_executable(app src/app.cpp src/notechart.cpp)
 include_directories(
     app
     PUBLIC
