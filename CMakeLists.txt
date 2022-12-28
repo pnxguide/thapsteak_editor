@@ -12,7 +12,7 @@ include(${wxWidgets_USE_FILE})
 
 find_package(fmt)
 
-add_executable(app src/App.cpp)
+add_executable(app src/app.cpp)
 include_directories(
     app
     PUBLIC
