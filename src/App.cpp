@@ -11,6 +11,16 @@ class Note;
 class Notechart;
 class RenderTimer;
 
+/**
+ * TODO: Command stacks (for undo-ing)
+ * TODO: Set BPM
+ * TODO: Set granularity
+ * TODO: Import/Export charts
+ * TODO: Auto-play with spacebar
+ * TODO: Add music (with single BPM)
+ * TODO: Add music (with multiple BPM)
+*/
+
 class App : public wxApp
 {
     bool render_loop_on;
@@ -258,7 +268,6 @@ void Canvas::mouseDown(wxMouseEvent &event)
         int absolute_ticks_with_granularity = (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
         this->chart->add_note(Note(absolute_ticks_with_granularity, (Lane)current_mouse_column, DIR_NONE, SIDE_NONE, false));
     }
-    // std::cout << current_mouse_column << " " << absolute_ticks_with_granularity << std::endl;
 }
 
 void Canvas::mouseWheel(wxMouseEvent &event)
@@ -477,13 +486,13 @@ void Canvas::update_frame(wxDC &dc, double delta_time)
             switch (note.side)
             {
             case SIDE_LEFT:
-                dc.SetBrush(wxColor(192, 128, 128));
+                dc.SetBrush(wxColor(255, 191, 191));
                 break;
             case SIDE_RIGHT:
-                dc.SetBrush(wxColor(128, 128, 192));
+                dc.SetBrush(wxColor(191, 191, 255));
                 break;
             default:
-                dc.SetBrush(wxColor(128, 128, 128));
+                dc.SetBrush(wxColor(191, 191, 191));
             }
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
             dc.DrawRectangle(x_position, y_position, COL_SIZE + 1,
@@ -500,7 +509,7 @@ void Canvas::update_frame(wxDC &dc, double delta_time)
                   current_mouse_column) != drawable_x_cells.end())
     {
         dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
-        dc.SetBrush(wxColor(224, 224, 224));
+        dc.SetBrush(wxColor(224, 224, 224, 127));
         // Calculate y-position of the hovered note
         //  - make it stick with the highest lower line
         dc.DrawRectangle(
