@@ -205,6 +205,9 @@ constexpr int COL_SIZE = 48;
 constexpr int ROW_SIZE = 3;
 constexpr int TICK_GRANULARITY = 4;
 
+std::vector<int> drawable_x_cells = {1, 3, 4, 5, 6, 7, 9,
+                                     10, 11, 12, 14, 15, 16};
+
 RenderTimer::RenderTimer(Canvas *pane) : wxTimer() { RenderTimer::pane = pane; }
 
 void RenderTimer::Notify() { pane->Refresh(); }
@@ -242,14 +245,20 @@ void Canvas::mouseDown(wxMouseEvent &event)
     wxCoord width, height;
     dc.GetSize(&width, &height);
 
-    int cell_height = 192 / TICK_GRANULARITY * ROW_SIZE;
+    int current_tick = (int)this->current_tick_double;
+
+    int cell_range_in_ticks = 192 / TICK_GRANULARITY;
+
     int current_mouse_column = this->current_x / COL_SIZE;
-    // int current_mouse_tick = (height - this->current_y) /  -
-    //     (this->current_y - ((current_tick % (192 / TICK_GRANULARITY)) * ROW_SIZE)) /
-    //          cell_height * cell_height) +
-    //             (cell_height - (ROW_SIZE * 6)) +
-    //             ((height - (cell_height - ((current_tick % (192 / TICK_GRANULARITY)) * ROW_SIZE))) %
-    //              cell_height);
+
+    if (std::find(drawable_x_cells.begin(), drawable_x_cells.end(),
+                  current_mouse_column) != drawable_x_cells.end())
+    {
+        int absolute_ticks = (height - this->current_y) / ROW_SIZE + current_tick;
+        int absolute_ticks_with_granularity = (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
+        this->chart->add_note(Note(absolute_ticks_with_granularity, (Lane)current_mouse_column, DIR_NONE, SIDE_NONE, false));
+    }
+    // std::cout << current_mouse_column << " " << absolute_ticks_with_granularity << std::endl;
 }
 
 void Canvas::mouseWheel(wxMouseEvent &event)
@@ -487,8 +496,6 @@ void Canvas::update_frame(wxDC &dc, double delta_time)
     int current_mouse_column = this->current_x / COL_SIZE;
 
     // Draw if in drawable x cells
-    std::vector<int> drawable_x_cells = {1, 3, 4, 5, 6, 7, 9,
-                                         10, 11, 12, 14, 15, 16};
     if (std::find(drawable_x_cells.begin(), drawable_x_cells.end(),
                   current_mouse_column) != drawable_x_cells.end())
     {
