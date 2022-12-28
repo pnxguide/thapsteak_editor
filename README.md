@@ -1,4 +1,4 @@
 # thapsteak_editor
 
 ## Screenshot
-<img src="/Screenshot.png" />
+<img src="/img/Screenshot.png" />
