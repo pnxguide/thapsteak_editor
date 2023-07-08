@@ -20,11 +20,14 @@ enum Lane {
 
 class Note {
    public:
+    long id;
+
     long tick;
     Lane lane;
     Direction direction{DIR_NONE};
     Side side{SIDE_NONE};
     bool is_longnote{false};
+    float value;
 
     Note(long _tick, Lane _lane, Direction _direction, Side _side, bool _is_longnote);
 };
@@ -39,5 +42,6 @@ class Notechart {
     std::vector<Note> notes;
 
    private:
+    int current_sequence{0};
     bool updated{false};
 };

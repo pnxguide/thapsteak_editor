@@ -10,11 +10,15 @@ void Notechart::update() { this->updated = false; }
 void Notechart::modify() { this->updated = true; }
 
 void Notechart::add_note(Note note) {
+    // Deduplicate
     if (std::find_if(this->notes.begin(), this->notes.end(), [note](const Note &n) {
             return (n.tick == note.tick) && (n.lane == note.lane);
         }) == this->notes.end()) {
         // Mark as modified
         this->modify();
+
+        // Assign note ID
+        note.id = current_sequence++;
 
         // Add and organize new note
         this->notes.push_back(note);

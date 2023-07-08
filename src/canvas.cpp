@@ -1,6 +1,7 @@
 #include "../include/canvas.hpp"
 
 #include <fmt/format.h>
+#include <wx/numdlg.h>
 
 constexpr int COL_SIZE = 48;
 constexpr int ROW_SIZE = 3;
@@ -14,6 +15,7 @@ void RenderTimer::start() { wxTimer::Start(10); }
 BEGIN_EVENT_TABLE(Canvas, wxPanel)
 EVT_MOTION(Canvas::mouseMove)
 EVT_LEFT_DOWN(Canvas::mouseDown)
+EVT_LEFT_UP(Canvas::mouseUp)
 EVT_MOUSEWHEEL(Canvas::mouseWheel)
 EVT_KEY_DOWN(Canvas::keyDown)
 EVT_PAINT(Canvas::paintEvent)
@@ -65,6 +67,13 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 }
                 break;
             }
+            // Warp
+            case 'F': {
+                long prompt =
+                    wxGetNumberFromUser("Warp to", "", "", 0, 0, INT_MAX);
+                this->current_tick_double = prompt * 192.0;
+                break;
+            }
         }
     }
 }
@@ -91,10 +100,33 @@ void Canvas::mouseDown(wxMouseEvent &event) {
                 (height - this->current_y) / ROW_SIZE + current_tick;
             int absolute_ticks_with_granularity =
                 (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
-            this->chart->add_note(Note(absolute_ticks_with_granularity,
-                                       (Lane)current_mouse_column, DIR_NONE,
-                                       SIDE_NONE, false));
+            Note new_note =
+                Note(absolute_ticks_with_granularity,
+                     (Lane)current_mouse_column, DIR_NONE, SIDE_NONE, false);
+
+            if ((Lane)current_mouse_column == LANE_BPM) {
+                wxString prompt = wxGetTextFromUser("BPM", "", "");
+                std::string str_prompt(prompt);
+                float bpm = std::atof(str_prompt.c_str());
+                new_note.value = bpm;
+            }
+
+            this->chart->add_note(new_note);
         }
+    } else if (mode == Mode::MODE_POINTER) {
+        this->is_highlighted = true;
+        this->highlight_x = this->current_x;
+        this->highlight_y = this->current_y;
+    }
+}
+
+void Canvas::mouseUp(wxMouseEvent &event) {
+    if (mode == Mode::MODE_CREATE) {
+    } else if (mode == Mode::MODE_POINTER) {
+        this->is_highlighted = false;
+        // TODO: Compute all highlighted notes
+        printf("(%d,%d) to (%d,%d)\n", this->highlight_x, this->highlight_y,
+               this->current_x, this->current_y);
     }
 }
 
@@ -164,99 +196,85 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
     for (int screen_y = height; screen_y >= 0; screen_y -= ROW_SIZE) {
         int y = screen_y - (current_tick * ROW_SIZE);
 
-        switch (tick_granularity[tick_granularity_index]) {
-            case 192: {
-                if ((height - y) % (ROW_SIZE) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 96: {
-                if ((height - y) % (ROW_SIZE * 2) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 64: {
-                if ((height - y) % (ROW_SIZE * 3) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 48: {
-                if ((height - y) % (ROW_SIZE * 4) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 32: {
-                if ((height - y) % (ROW_SIZE * 6) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 24: {
-                if ((height - y) % (ROW_SIZE * 8) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 16: {
-                if ((height - y) % (ROW_SIZE * 12) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 12: {
-                if ((height - y) % (ROW_SIZE * 16) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 8: {
-                if ((height - y) % (ROW_SIZE * 24) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 6: {
-                if ((height - y) % (ROW_SIZE * 32) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 4: {
-                if ((height - y) % (ROW_SIZE * 48) == 0) {
-                    dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 2: {
-                if ((height - y) % (ROW_SIZE * 96) == 0) {
-                    dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
-            }
-            case 1: {
-                if ((height - y) % (ROW_SIZE * 192) == 0) {
-                    dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
-                    dc.DrawLine(0, screen_y, width, screen_y);
-                }
-                // break;
+        if (tick_granularity[tick_granularity_index] % 192 == 0) {
+            if ((height - y) % (ROW_SIZE) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
+        if (tick_granularity[tick_granularity_index] % 96 == 0) {
+            if ((height - y) % (ROW_SIZE * 2) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 64 == 0) {
+            if ((height - y) % (ROW_SIZE * 3) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 48 == 0) {
+            if ((height - y) % (ROW_SIZE * 4) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 32 == 0) {
+            if ((height - y) % (ROW_SIZE * 6) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 24 == 0) {
+            if ((height - y) % (ROW_SIZE * 8) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 16 == 0) {
+            if ((height - y) % (ROW_SIZE * 12) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 12 == 0) {
+            if ((height - y) % (ROW_SIZE * 16) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 8 == 0) {
+            if ((height - y) % (ROW_SIZE * 24) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 6 == 0) {
+            if ((height - y) % (ROW_SIZE * 32) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 4 == 0) {
+            if ((height - y) % (ROW_SIZE * 48) == 0) {
+                dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 2 == 0) {
+            if ((height - y) % (ROW_SIZE * 96) == 0) {
+                dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+        if (tick_granularity[tick_granularity_index] % 1 == 0) {
+            if ((height - y) % (ROW_SIZE * 192) == 0) {
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.DrawLine(0, screen_y, width, screen_y);
+            }
+        }
+
         if ((height - y - 96) % (ROW_SIZE * 192) == 0) {
             dc.SetFont(wxFont{128, wxFONTFAMILY_SWISS, wxNORMAL, wxBOLD});
             dc.SetTextForeground(wxColor(224, 224, 224));
@@ -279,6 +297,7 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
             // The bottom line is (current_tick)
             int x_position = note.lane * COL_SIZE;
 
+            // Note color
             switch (note.side) {
                 case SIDE_LEFT:
                     dc.SetBrush(wxColor(255, 191, 191));
@@ -289,9 +308,31 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                 default:
                     dc.SetBrush(wxColor(191, 191, 191));
             }
+
+            if (note.lane == LANE_BPM) {
+                dc.SetBrush(wxColor(128, 128, 128));
+            }
+
+            // if (note.lane == LANE_BPM) {
+            //     dc.SetBrush(wxColor(128, 128, 128));
+            // }
+
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
             dc.DrawRectangle(x_position, y_position, COL_SIZE + 1,
                              (ROW_SIZE * 6) + 1);
+
+            // Overlay
+            if (note.lane == LANE_BPM) {
+                dc.SetFont(wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
+                dc.SetTextForeground(wxColor(255, 255, 255));
+                dc.DrawText(wxT("" + fmt::format("{0:^7.3f}", note.value)),
+                            x_position, y_position + 3);
+            } else {
+                dc.SetFont(wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
+                dc.SetTextForeground(wxColor(255, 255, 255));
+                dc.DrawText(wxT("" + fmt::format("{0:^7d}", note.id)),
+                            x_position, y_position + 3);
+            }
         }
     }
 
@@ -308,18 +349,33 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
             dc.SetBrush(wxColor(224, 224, 224, 127));
             // Calculate y-position of the hovered note
             //  - make it stick with the highest lower line
-            dc.DrawRectangle(
-                current_mouse_column * COL_SIZE,
-                this->current_y - (ROW_SIZE * 3),
-                // ((this->current_y - ((current_tick % (192 /
-                // tick_granularity[tick_granularity_index])) * ROW_SIZE)) /
-                //  cell_height * cell_height) +
-                //     (cell_height - (ROW_SIZE * 6)) +
-                //     ((height - (cell_height - ((current_tick %
-                //     (192 / tick_granularity[tick_granularity_index])) *
-                //     ROW_SIZE))) %
-                //      cell_height),
-                COL_SIZE + 1, ROW_SIZE * 6);
+            dc.DrawRectangle(current_mouse_column * COL_SIZE,
+                             this->current_y - (ROW_SIZE * 3), COL_SIZE + 1,
+                             ROW_SIZE * 6);
+        }
+    } else if (mode == Mode::MODE_POINTER) {
+        // Highlight
+        if (this->is_highlighted) {
+            // Draw Highlighter
+            dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
+            dc.SetBrush(wxColor(255, 255, 224, 127));
+
+            int x1 = this->highlight_x;
+            int x2 = this->current_x;
+            int y1 = this->highlight_y;
+            int y2 = this->current_y;
+
+            if (x1 > x2) {
+                x2 = this->highlight_x;
+                x1 = this->current_x;
+            }
+
+            if (y1 > y2) {
+                y2 = this->highlight_y;
+                y1 = this->current_y;
+            }
+
+            dc.DrawRectangle(x1, y1, x2 - x1, y2 - y1);
         }
     }
 

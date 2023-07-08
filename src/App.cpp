@@ -8,9 +8,9 @@
 #include "../include/app.hpp"
 
 /**
- * TODO: Mode (pointer/highlight, create, delete)
  * TODO: Highlight
  * TODO: Flick
+ * TODO: Long Note
  * TODO: Right-click to remove a note
  * TODO: Command stacks (for undo-ing)
  * TODO: Set BPM

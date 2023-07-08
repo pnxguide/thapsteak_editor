@@ -14,16 +14,17 @@ class Canvas : public wxPanel {
     void render(wxDC &dc);
     void update_frame(wxDC &dc, double delta_time);
 
+    void mouseUp(wxMouseEvent &event);
     void mouseDown(wxMouseEvent &event);
     void mouseMove(wxMouseEvent &event);
     void mouseWheel(wxMouseEvent &event);
-
-    // TODO:
     void keyDown(wxKeyEvent &event);
-    // // TODO:
-    // void changeTickGranularity(wxKeyEvent &event);
 
     std::unique_ptr<Notechart> chart;
+
+    bool is_highlighted{false};
+    int highlight_x{0}, highlight_y{0};
+    std::vector<std::unique_ptr<Note>> highlighted;
 
     int tick_granularity_index{0};
     Mode mode{Mode::MODE_POINTER};
