@@ -2,6 +2,9 @@
 
 #include "notechart.hpp"
 
+enum Mode { MODE_POINTER, MODE_CREATE };
+const std::vector<std::string> ModeStr{ "MODE_POINTER", "MODE_CREATE" };
+
 class Canvas : public wxPanel {
    public:
     Canvas(wxFrame *parent);
@@ -15,7 +18,15 @@ class Canvas : public wxPanel {
     void mouseMove(wxMouseEvent &event);
     void mouseWheel(wxMouseEvent &event);
 
+    // TODO:
+    void keyDown(wxKeyEvent &event);
+    // // TODO:
+    // void changeTickGranularity(wxKeyEvent &event);
+
     std::unique_ptr<Notechart> chart;
+
+    int tick_granularity_index{0};
+    Mode mode{Mode::MODE_POINTER};
 
     int current_x{0}, current_y{0};
     double current_tick_double{12.0};
