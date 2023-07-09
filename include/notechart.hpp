@@ -1,6 +1,14 @@
+#include <unordered_map>
 #include <vector>
 
-enum Direction { DIR_NONE = -1, DIR_RIGHT = 0, DIR_URIGHT = 45, DIR_UP = 90, DIR_ULEFT = 135, DIR_LEFT = 180 };
+enum Direction {
+    DIR_NONE = -1,
+    DIR_RIGHT = 0,
+    DIR_URIGHT = 45,
+    DIR_UP = 90,
+    DIR_ULEFT = 135,
+    DIR_LEFT = 180
+};
 enum Side { SIDE_NONE, SIDE_LEFT, SIDE_RIGHT };
 enum Lane {
     LANE_BPM = 1,
@@ -29,7 +37,8 @@ class Note {
     bool is_longnote{false};
     float value;
 
-    Note(long _tick, Lane _lane, Direction _direction, Side _side, bool _is_longnote);
+    Note(long _tick, Lane _lane, Direction _direction, Side _side,
+         bool _is_longnote);
 };
 
 class Notechart {
@@ -39,7 +48,8 @@ class Notechart {
     void update();
     void add_note(Note note);
 
-    std::vector<Note> notes;
+    std::vector<std::shared_ptr<Note>> notes;
+    std::unordered_map<int, std::shared_ptr<Note>> note_index;
 
    private:
     int current_sequence{0};

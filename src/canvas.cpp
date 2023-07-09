@@ -74,6 +74,14 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 this->current_tick_double = prompt * 192.0;
                 break;
             }
+            // Flick
+            case 'Z': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note = this->chart->note_index[note_id];
+                    ptr_to_note->direction = DIR_LEFT;
+                    printf("%p %d %d\n", ptr_to_note.get(), ptr_to_note->id, ptr_to_note->direction);
+                }
+            }
         }
     }
 }
@@ -110,6 +118,8 @@ void Canvas::mouseDown(wxMouseEvent &event) {
                 float bpm = std::atof(str_prompt.c_str());
                 new_note.value = bpm;
             }
+
+            printf("%p\n", &new_note);
 
             this->chart->add_note(new_note);
         }
@@ -290,15 +300,35 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
         }
     }
 
+    // Reset the highlight set
+    int x1, x2, y1, y2;
+    if (this->is_highlighted) {
+        this->highlighted_notes = std::set<int>();
+        x1 = this->highlight_x;
+        x2 = this->current_x;
+        y1 = this->highlight_y;
+        y2 = this->current_y;
+
+        if (x1 > x2) {
+            x2 = this->highlight_x;
+            x1 = this->current_x;
+        }
+
+        if (y1 > y2) {
+            y2 = this->highlight_y;
+            y1 = this->current_y;
+        }
+    }
+
     // Render notes
-    for (Note note : this->chart->notes) {
-        int y_position = height - ((note.tick - current_tick + (6)) * ROW_SIZE);
+    for (std::shared_ptr<Note> note : this->chart->notes) {
+        int y_position = height - ((note->tick - current_tick + (6)) * ROW_SIZE);
         if (y_position >= 0 && y_position < height) {
             // The bottom line is (current_tick)
-            int x_position = note.lane * COL_SIZE;
+            int x_position = note->lane * COL_SIZE;
 
             // Note color
-            switch (note.side) {
+            switch (note->side) {
                 case SIDE_LEFT:
                     dc.SetBrush(wxColor(255, 191, 191));
                     break;
@@ -309,28 +339,34 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                     dc.SetBrush(wxColor(191, 191, 191));
             }
 
-            if (note.lane == LANE_BPM) {
+            if (note->lane == LANE_BPM) {
                 dc.SetBrush(wxColor(128, 128, 128));
             }
 
-            // if (note.lane == LANE_BPM) {
-            //     dc.SetBrush(wxColor(128, 128, 128));
-            // }
+            if (this->is_highlighted &&
+                x_position > x1 - (COL_SIZE + 1) && x_position < x2 &&
+                y_position > y1 - ((ROW_SIZE * 6) + 1) && y_position < y2) {
+                this->highlighted_notes.insert(note->id);
+            }
+
+            if (this->highlighted_notes.contains(note->id)) {
+                dc.SetBrush(wxColor(192, 128, 128));
+            }
 
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
             dc.DrawRectangle(x_position, y_position, COL_SIZE + 1,
                              (ROW_SIZE * 6) + 1);
 
             // Overlay
-            if (note.lane == LANE_BPM) {
+            if (note->lane == LANE_BPM) {
                 dc.SetFont(wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
                 dc.SetTextForeground(wxColor(255, 255, 255));
-                dc.DrawText(wxT("" + fmt::format("{0:^7.3f}", note.value)),
+                dc.DrawText(wxT("" + fmt::format("{:.3f}", note->value)),
                             x_position, y_position + 3);
             } else {
                 dc.SetFont(wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
                 dc.SetTextForeground(wxColor(255, 255, 255));
-                dc.DrawText(wxT("" + fmt::format("{0:^7d}", note.id)),
+                dc.DrawText(wxT("" + fmt::format("{:d} {:d}", note->id, note->direction)),
                             x_position, y_position + 3);
             }
         }
@@ -360,21 +396,6 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
             dc.SetBrush(wxColor(255, 255, 224, 127));
 
-            int x1 = this->highlight_x;
-            int x2 = this->current_x;
-            int y1 = this->highlight_y;
-            int y2 = this->current_y;
-
-            if (x1 > x2) {
-                x2 = this->highlight_x;
-                x1 = this->current_x;
-            }
-
-            if (y1 > y2) {
-                y2 = this->highlight_y;
-                y1 = this->current_y;
-            }
-
             dc.DrawRectangle(x1, y1, x2 - x1, y2 - y1);
         }
     }
@@ -391,4 +412,11 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
     dc.DrawText(wxT("" + fmt::format("Tick Granularity: {:3d}",
                                      tick_granularity[tick_granularity_index])),
                 width - 290, 40);
+
+    int index = 0;
+    for (std::shared_ptr<Note> note : this->chart->notes) {
+        dc.DrawText(wxT("" + fmt::format("({:d} : {:d})",
+                                     note->id, note->direction)),
+                width - 290, 60 + 20 * (index++));
+    }
 }

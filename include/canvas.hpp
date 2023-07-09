@@ -1,5 +1,6 @@
 #include <wx/wx.h>
 
+#include <set>
 #include "notechart.hpp"
 
 enum Mode { MODE_POINTER, MODE_CREATE };
@@ -24,7 +25,7 @@ class Canvas : public wxPanel {
 
     bool is_highlighted{false};
     int highlight_x{0}, highlight_y{0};
-    std::vector<std::unique_ptr<Note>> highlighted;
+    std::set<int> highlighted_notes;
 
     int tick_granularity_index{0};
     Mode mode{Mode::MODE_POINTER};

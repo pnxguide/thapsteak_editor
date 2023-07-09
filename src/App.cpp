@@ -8,7 +8,6 @@
 #include "../include/app.hpp"
 
 /**
- * TODO: Highlight
  * TODO: Flick
  * TODO: Long Note
  * TODO: Right-click to remove a note
