@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -11,8 +12,7 @@ enum Direction {
     DIR_LEFT = 180
 };
 enum Side { SIDE_NONE, SIDE_LEFT, SIDE_RIGHT };
-const std::vector<std::string> side_text{"null", "left",
-                                         "right"};
+const std::vector<std::string> side_text{"null", "left", "right"};
 
 enum Lane {
     LANE_NONE = 0,
@@ -30,16 +30,9 @@ enum Lane {
     LANE_E2 = 15,
     LANE_E3 = 16
 };
-const std::vector<std::string> lane_text{
-    "",
-    "BPM",
-    "",
-    "H1", "H2", "H3", "H4", "H5",
-    "",
-    "N1", "N2", "N3", "N4",
-    "",
-    "E1", "E2", "E3"
-};
+const std::vector<std::string> lane_text{"",   "BPM", "",   "H1", "H2", "H3",
+                                         "H4", "H5",  "",   "N1", "N2", "N3",
+                                         "N4", "",    "E1", "E2", "E3"};
 
 class Note {
    public:

@@ -1,10 +1,12 @@
 #include <wx/wx.h>
 
+#include <chrono>
 #include <set>
+
 #include "notechart.hpp"
 
 enum Mode { MODE_POINTER, MODE_CREATE };
-const std::vector<std::string> ModeStr{ "MODE_POINTER", "MODE_CREATE" };
+const std::vector<std::string> ModeStr{"MODE_POINTER", "MODE_CREATE"};
 
 class Canvas : public wxPanel {
    public:
