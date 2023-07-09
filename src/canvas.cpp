@@ -8,7 +8,7 @@
 using json = nlohmann::json;
 
 constexpr int COL_SIZE = 48;
-constexpr int ROW_SIZE = 3;
+constexpr int NOTE_SIZE = 3;
 
 RenderTimer::RenderTimer(Canvas *pane) : wxTimer() { RenderTimer::pane = pane; }
 
@@ -68,6 +68,19 @@ void Canvas::keyDown(wxKeyEvent &event) {
             case '-': {
                 if (tick_granularity_index > 0) {
                     tick_granularity_index--;
+                }
+                break;
+            }
+            // Change row size
+            case ']': {
+                if (this->current_row_size < 4) {
+                    this->current_row_size++;
+                }
+                break;
+            }
+            case '[': {
+                if (this->current_row_size > 1) {
+                    this->current_row_size--;
                 }
                 break;
             }
@@ -240,7 +253,7 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 wxFileDialog export_dialog(
                     this, _("Export JSON"), "", "",
                     "Thapsteak files (*.thapsteak)|*.thapsteak",
-                    wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
+                    wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
                 if (export_dialog.ShowModal() == wxID_CANCEL) {
                     break;
@@ -250,7 +263,8 @@ void Canvas::keyDown(wxKeyEvent &event) {
 
                 std::string file_path(export_dialog.GetPath());
                 std::FILE *exported_file = std::fopen(file_path.c_str(), "w");
-                std::fwrite(content.data(), sizeof(char), content.size(), exported_file);
+                std::fwrite(content.data(), sizeof(char), content.size(),
+                            exported_file);
                 std::fclose(exported_file);
 
                 break;
@@ -315,7 +329,8 @@ void Canvas::mouseDown(wxMouseEvent &event) {
         if (std::find(drawable_x_cells.begin(), drawable_x_cells.end(),
                       current_mouse_column) != drawable_x_cells.end()) {
             int absolute_ticks =
-                (height - this->current_y) / ROW_SIZE + current_tick;
+                (height - this->current_y) / this->current_row_size +
+                current_tick;
             int absolute_ticks_with_granularity =
                 (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
             Note new_note = Note(absolute_ticks_with_granularity,
@@ -411,100 +426,105 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
     // 1 row = 1/192 room
     // 1 note = 1/32 room
-    for (int screen_y = height; screen_y >= 0; screen_y -= ROW_SIZE) {
-        int y = screen_y - (current_tick * ROW_SIZE);
+    for (int screen_y = height; screen_y >= 0;
+         screen_y -= this->current_row_size) {
+        int y = screen_y - (current_tick * this->current_row_size);
 
         if (tick_granularity[tick_granularity_index] % 192 == 0) {
-            if ((height - y) % (ROW_SIZE) == 0) {
+            if ((height - y) % (this->current_row_size) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 96 == 0) {
-            if ((height - y) % (ROW_SIZE * 2) == 0) {
+            if ((height - y) % (this->current_row_size * 2) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 64 == 0) {
-            if ((height - y) % (ROW_SIZE * 3) == 0) {
+            if ((height - y) % (this->current_row_size * 3) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 48 == 0) {
-            if ((height - y) % (ROW_SIZE * 4) == 0) {
+            if ((height - y) % (this->current_row_size * 4) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 32 == 0) {
-            if ((height - y) % (ROW_SIZE * 6) == 0) {
+            if ((height - y) % (this->current_row_size * 6) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 24 == 0) {
-            if ((height - y) % (ROW_SIZE * 8) == 0) {
+            if ((height - y) % (this->current_row_size * 8) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 16 == 0) {
-            if ((height - y) % (ROW_SIZE * 12) == 0) {
+            if ((height - y) % (this->current_row_size * 12) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 12 == 0) {
-            if ((height - y) % (ROW_SIZE * 16) == 0) {
+            if ((height - y) % (this->current_row_size * 16) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 8 == 0) {
-            if ((height - y) % (ROW_SIZE * 24) == 0) {
+            if ((height - y) % (this->current_row_size * 24) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 6 == 0) {
-            if ((height - y) % (ROW_SIZE * 32) == 0) {
+            if ((height - y) % (this->current_row_size * 32) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 4 == 0) {
-            if ((height - y) % (ROW_SIZE * 48) == 0) {
+            if ((height - y) % (this->current_row_size * 48) == 0) {
                 dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 2 == 0) {
-            if ((height - y) % (ROW_SIZE * 96) == 0) {
+            if ((height - y) % (this->current_row_size * 96) == 0) {
                 dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 1 == 0) {
-            if ((height - y) % (ROW_SIZE * 192) == 0) {
+            if ((height - y) % (this->current_row_size * 192) == 0) {
                 dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
 
-        if ((height - y - 96) % (ROW_SIZE * 192) == 0) {
+        if ((height - y - 96) % (this->current_row_size * 192) == 0) {
             dc.SetFont(wxFont{128, wxFONTFAMILY_SWISS, wxNORMAL, wxBOLD});
             dc.SetTextForeground(wxColor(224, 224, 224));
-            dc.DrawText(wxT("#" + fmt::format("{:03d}",
-                                              (height - y) / (ROW_SIZE * 192))),
-                        width - 320, screen_y - 128 + 96);
-        } else if ((height - y) % (ROW_SIZE * 192) == 0) {
+            dc.DrawText(
+                wxT("#" +
+                    fmt::format("{:03d}",
+                                (height - y) / (this->current_row_size * 192))),
+                width - 320, screen_y - 128 + 96);
+        } else if ((height - y) % (this->current_row_size * 192) == 0) {
             dc.SetFont(wxFont{128, wxFONTFAMILY_SWISS, wxNORMAL, wxBOLD});
             dc.SetTextForeground(wxColor(224, 224, 224));
-            dc.DrawText(wxT("#" + fmt::format("{:03d}",
-                                              (height - y) / (ROW_SIZE * 192))),
-                        width - 320, screen_y - 128);
+            dc.DrawText(
+                wxT("#" +
+                    fmt::format("{:03d}",
+                                (height - y) / (this->current_row_size * 192))),
+                width - 320, screen_y - 128);
         }
     }
 
@@ -533,9 +553,10 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
         std::shared_ptr<Note> note(this->chart->notes[idx]);
 
         int y_position =
-            height - ((note->tick - current_tick + (6)) * ROW_SIZE);
+            height - ((note->tick - current_tick) * this->current_row_size) -
+            (NOTE_SIZE * 6);
 
-        if (y_position + ((ROW_SIZE * 6) + 1) >= 0 && y_position < height) {
+        if (y_position + ((NOTE_SIZE * 6) + 1) >= 0 && y_position < height) {
             // The bottom line is (current_tick)
             int x_position = note->lane * COL_SIZE;
 
@@ -556,7 +577,7 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
             }
 
             if (this->is_highlighted && x_position > x1 - (COL_SIZE + 1) &&
-                x_position < x2 && y_position > y1 - ((ROW_SIZE * 6) + 1) &&
+                x_position < x2 && y_position > y1 - ((NOTE_SIZE * 6) + 1) &&
                 y_position < y2) {
                 this->highlighted_notes.insert(note->id);
             }
@@ -567,7 +588,7 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
             dc.DrawRectangle(x_position, y_position, COL_SIZE + 1,
-                             (ROW_SIZE * 6) + 1);
+                             (NOTE_SIZE * 6) + 1);
 
             // Overlay
             if (note->lane == LANE_BPM) {
@@ -589,17 +610,18 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
                         if (prev->side == note->side &&
                             this->chart->is_same_lane_group(prev, note)) {
-                            int prev_y_position =
-                                height -
-                                ((prev->tick - current_tick + (6)) * ROW_SIZE);
+                            int prev_y_position = height -
+                                                  ((prev->tick - current_tick) *
+                                                   this->current_row_size) -
+                                                  (NOTE_SIZE * 6);
                             int prev_x_position = prev->lane * COL_SIZE;
 
                             dc.SetPen(wxPen(wxColor(128, 128, 128), 5));
                             dc.DrawLine(
                                 x_position + ((COL_SIZE + 1) / 2),
-                                y_position + (((ROW_SIZE * 6) + 1) / 2),
+                                y_position + (((NOTE_SIZE * 6) + 1) / 2),
                                 prev_x_position + ((COL_SIZE + 1) / 2),
-                                prev_y_position + (((ROW_SIZE * 6) + 1) / 2));
+                                prev_y_position + (((NOTE_SIZE * 6) + 1) / 2));
 
                             break;
                         }
@@ -616,8 +638,9 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                             if (next->is_longnote) {
                                 int next_y_position =
                                     height -
-                                    ((next->tick - current_tick + (6)) *
-                                     ROW_SIZE);
+                                    ((next->tick - current_tick) *
+                                     this->current_row_size) -
+                                    (NOTE_SIZE * 6);
 
                                 if (next_y_position < 0) {
                                     int next_x_position = next->lane * COL_SIZE;
@@ -625,10 +648,11 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                                     dc.SetPen(wxPen(wxColor(128, 128, 128), 5));
                                     dc.DrawLine(
                                         x_position + ((COL_SIZE + 1) / 2),
-                                        y_position + (((ROW_SIZE * 6) + 1) / 2),
+                                        y_position +
+                                            (((NOTE_SIZE * 6) + 1) / 2),
                                         next_x_position + ((COL_SIZE + 1) / 2),
                                         next_y_position +
-                                            (((ROW_SIZE * 6) + 1) / 2));
+                                            (((NOTE_SIZE * 6) + 1) / 2));
                                 }
                             }
 
@@ -678,8 +702,8 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
     if (mode == Mode::MODE_CREATE) {
         // Draw hovered notes
-        int cell_height =
-            192 / tick_granularity[tick_granularity_index] * ROW_SIZE;
+        int cell_height = 192 / tick_granularity[tick_granularity_index] *
+                          this->current_row_size;
         int current_mouse_column = this->current_x / COL_SIZE;
 
         // Draw if in drawable x cells
@@ -690,8 +714,8 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
             // Calculate y-position of the hovered note
             //  - make it stick with the highest lower line
             dc.DrawRectangle(current_mouse_column * COL_SIZE,
-                             this->current_y - (ROW_SIZE * 3), COL_SIZE + 1,
-                             ROW_SIZE * 6);
+                             this->current_y - (NOTE_SIZE * 3), COL_SIZE + 1,
+                             NOTE_SIZE * 6);
         }
     } else if (mode == Mode::MODE_POINTER) {
         // Highlight
@@ -720,6 +744,16 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
     dc.DrawText(
         wxT("" + fmt::format("Side: {:<}", side_text[this->current_side])),
         width - 290, 60);
-    dc.DrawText(wxT("" + fmt::format("Long Note: {:}", this->is_long_note)),
+    dc.DrawText(wxT("" + fmt::format("Row Size: {:d}", this->current_row_size)),
                 width - 290, 80);
+    // dc.DrawText(wxT("I - Import / S - Save"),
+    //             width - 290, 80);
+    // dc.DrawText(wxT("Q - Selection / W - Creation"),
+    //             width - 290, 100);
+    // dc.DrawText(wxT("Side (,./) - None/Left/Right"),
+    //             width - 290, 120);
+    // dc.DrawText(wxT("Long Note - Shift / Flick - ZXCVB"),
+    //             width - 290, 140);
+    // dc.DrawText(wxT("Tick - +/-"),
+    //             width - 290, 160);
 }

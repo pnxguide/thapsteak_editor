@@ -33,6 +33,7 @@ class Canvas : public wxPanel {
 
     int current_x{0}, current_y{0};
     double current_tick_double{12.0};
+    int current_row_size{3};
 
     Side current_side{SIDE_NONE};
 
