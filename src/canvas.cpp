@@ -236,6 +236,25 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 std::fclose(imported_file);
                 break;
             }
+            case 'S': {
+                wxFileDialog export_dialog(
+                    this, _("Export JSON"), "", "",
+                    "Thapsteak files (*.thapsteak)|*.thapsteak",
+                    wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
+
+                if (export_dialog.ShowModal() == wxID_CANCEL) {
+                    break;
+                }
+
+                std::string content = this->chart->to_string();
+
+                std::string file_path(export_dialog.GetPath());
+                std::FILE *exported_file = std::fopen(file_path.c_str(), "w");
+                std::fwrite(content.data(), sizeof(char), content.size(), exported_file);
+                std::fclose(exported_file);
+
+                break;
+            }
         }
     }
 

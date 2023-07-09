@@ -1,6 +1,9 @@
 #include "../include/notechart.hpp"
 
 #include <memory>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 Note::Note(long _tick, Lane _lane, Direction _direction, Side _side,
            bool _is_longnote)
@@ -9,6 +12,22 @@ Note::Note(long _tick, Lane _lane, Direction _direction, Side _side,
       direction(_direction),
       side(_side),
       is_longnote(_is_longnote) {}
+
+std::string Note::to_string() {
+    json j;
+    j["id"] = std::to_string(this->id);
+    j["row"] = this->tick;
+    j["channel"] = lane_text[this->lane];
+    j["side"] = side_text[this->side];
+    j["longNote"] = this->is_longnote;
+    if (this->value != 0.0) {
+        j["value"] = this->value;
+    }
+    if (this->direction != DIR_NONE) {
+        j["angle"] = this->direction;
+    }
+    return j.dump();
+}
 
 bool Notechart::is_updated() { return this->updated; }
 
@@ -56,4 +75,17 @@ void Notechart::add_note(Note note) {
                       return lhs->tick < rhs->tick;
                   });
     }
+}
+
+std::string Notechart::to_string() {
+    std::string buffer;
+    buffer += "{\"events\":[";
+    for (std::shared_ptr<Note> note : this->notes) {
+        buffer += note->to_string();
+        buffer += ",";
+    }
+    buffer.resize(buffer.size() - 1);
+    buffer += "]}";
+
+    return buffer;
 }

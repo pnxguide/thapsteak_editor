@@ -11,8 +11,8 @@ enum Direction {
     DIR_LEFT = 180
 };
 enum Side { SIDE_NONE, SIDE_LEFT, SIDE_RIGHT };
-const std::vector<std::string> side_text{"SIDE_NONE", "SIDE_LEFT",
-                                         "SIDE_RIGHT"};
+const std::vector<std::string> side_text{"null", "left",
+                                         "right"};
 
 enum Lane {
     LANE_NONE = 0,
@@ -30,6 +30,16 @@ enum Lane {
     LANE_E2 = 15,
     LANE_E3 = 16
 };
+const std::vector<std::string> lane_text{
+    "",
+    "BPM",
+    "",
+    "H1", "H2", "H3", "H4", "H5",
+    "",
+    "N1", "N2", "N3", "N4",
+    "",
+    "E1", "E2", "E3"
+};
 
 class Note {
    public:
@@ -39,10 +49,12 @@ class Note {
     Direction direction{DIR_NONE};
     Side side{SIDE_NONE};
     bool is_longnote{false};
-    float value;
+    float value{0.0};
 
     Note(long _tick, Lane _lane, Direction _direction, Side _side,
          bool _is_longnote);
+
+    std::string to_string();
 };
 
 class Notechart {
@@ -56,6 +68,8 @@ class Notechart {
     std::unordered_map<int, std::shared_ptr<Note>> note_index;
 
     bool is_same_lane_group(std::shared_ptr<Note> a, std::shared_ptr<Note> b);
+
+    std::string to_string();
 
    private:
     int current_sequence{0};
