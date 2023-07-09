@@ -37,11 +37,8 @@ Canvas::Canvas(wxFrame *parent) : wxPanel(parent) {
 }
 
 void Canvas::mouseMove(wxMouseEvent &event) {
-    wxPaintDC dc(this);
-
-    wxPoint current_mouse_position = event.GetLogicalPosition(dc);
-    this->current_x = current_mouse_position.x;
-    this->current_y = current_mouse_position.y;
+    this->current_x = event.GetX();
+    this->current_y = event.GetY();
 }
 
 void Canvas::keyDown(wxKeyEvent &event) {
@@ -317,13 +314,6 @@ void Canvas::keyUp(wxKeyEvent &event) {
 
 void Canvas::mouseDown(wxMouseEvent &event) {
     if (mode == Mode::MODE_CREATE) {
-        wxPaintDC dc(this);
-
-        // Compute current tick
-        // Assume the bottom line is 0 ticks
-        wxCoord width, height;
-        dc.GetSize(&width, &height);
-
         int current_tick = (int)this->current_tick_double;
 
         int cell_range_in_ticks =
@@ -334,7 +324,7 @@ void Canvas::mouseDown(wxMouseEvent &event) {
         if (std::find(drawable_x_cells.begin(), drawable_x_cells.end(),
                       current_mouse_column) != drawable_x_cells.end()) {
             int absolute_ticks =
-                (height - this->current_y) / this->current_row_size +
+                (this->height - this->current_y) / this->current_row_size +
                 current_tick;
             int absolute_ticks_with_granularity =
                 (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
@@ -369,8 +359,6 @@ void Canvas::mouseUp(wxMouseEvent &event) {
 }
 
 void Canvas::mouseWheel(wxMouseEvent &event) {
-    wxPaintDC dc(this);
-
     if (event.GetWheelRotation() != 0) {
         this->is_autoplay = false;
         this->current_tick_double += event.GetWheelRotation();
@@ -380,6 +368,9 @@ void Canvas::mouseWheel(wxMouseEvent &event) {
 
 void Canvas::paintEvent(wxPaintEvent &evt) {
     wxPaintDC dc(this);
+
+    dc.GetSize(&(this->width), &(this->height));
+
     render(dc);
 }
 

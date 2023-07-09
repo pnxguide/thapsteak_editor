@@ -43,6 +43,8 @@ class Canvas : public wxPanel {
 
     bool is_autoplay{false};
 
+    wxCoord width, height;
+
     std::chrono::time_point<std::chrono::steady_clock> latest_update_time;
 
     DECLARE_EVENT_TABLE()
