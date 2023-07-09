@@ -96,7 +96,7 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 for (int note_id : this->highlighted_notes) {
                     std::shared_ptr<Note> ptr_to_note =
                         this->chart->note_index[note_id];
-                    ptr_to_note->direction = DIR_LEFT;
+                    ptr_to_note->direction = DIR_RIGHT;
                 }
                 break;
             }
@@ -104,7 +104,7 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 for (int note_id : this->highlighted_notes) {
                     std::shared_ptr<Note> ptr_to_note =
                         this->chart->note_index[note_id];
-                    ptr_to_note->direction = DIR_ULEFT;
+                    ptr_to_note->direction = DIR_URIGHT;
                 }
                 break;
             }
@@ -120,7 +120,7 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 for (int note_id : this->highlighted_notes) {
                     std::shared_ptr<Note> ptr_to_note =
                         this->chart->note_index[note_id];
-                    ptr_to_note->direction = DIR_URIGHT;
+                    ptr_to_note->direction = DIR_ULEFT;
                 }
                 break;
             }
@@ -128,7 +128,7 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 for (int note_id : this->highlighted_notes) {
                     std::shared_ptr<Note> ptr_to_note =
                         this->chart->note_index[note_id];
-                    ptr_to_note->direction = DIR_RIGHT;
+                    ptr_to_note->direction = DIR_LEFT;
                 }
                 break;
             }
@@ -683,18 +683,12 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                             dc.DrawRotatedText(wxT("➔"), x_position + 24,
                                                y_position - 9,
                                                180 - note->direction);
-                            // dc.DrawRotatedText(wxT("➔"), x_position + 24,
-                            //                    y_position + 18,
-                            //                    note->direction);
                             break;
                         }
                         case DIR_ULEFT: {
                             dc.DrawRotatedText(wxT("➔"), x_position + 15,
                                                y_position - 2,
                                                180 - note->direction);
-                            // dc.DrawRotatedText(wxT("➔"), x_position + 17,
-                            //                    y_position + 17,
-                            //                    note->direction);
                             break;
                         }
                         case DIR_UP: {
@@ -707,18 +701,12 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                             dc.DrawRotatedText(wxT("➔"), x_position + 17,
                                                y_position + 17,
                                                180 - note->direction);
-                            // dc.DrawRotatedText(wxT("➔"), x_position + 15,
-                            //                    y_position - 2,
-                            //                    note->direction);
                             break;
                         }
                         case DIR_RIGHT: {
                             dc.DrawRotatedText(wxT("➔"), x_position + 24,
                                                y_position + 18,
                                                180 - note->direction);
-                            // dc.DrawRotatedText(wxT("➔"), x_position + 24,
-                            //                    y_position - 9,
-                            //                    note->direction);
                             break;
                         }
                     }
@@ -773,14 +761,4 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
         width - 290, 60);
     dc.DrawText(wxT("" + fmt::format("Row Size: {:d}", this->current_row_size)),
                 width - 290, 80);
-    // dc.DrawText(wxT("I - Import / S - Save"),
-    //             width - 290, 80);
-    // dc.DrawText(wxT("Q - Selection / W - Creation"),
-    //             width - 290, 100);
-    // dc.DrawText(wxT("Side (,./) - None/Left/Right"),
-    //             width - 290, 120);
-    // dc.DrawText(wxT("Long Note - Shift / Flick - ZXCVB"),
-    //             width - 290, 140);
-    // dc.DrawText(wxT("Tick - +/-"),
-    //             width - 290, 160);
 }

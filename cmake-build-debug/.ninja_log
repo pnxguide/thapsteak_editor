@@ -1,0 +1,5 @@
+# ninja log v5
+0	1117	1688905153360446980	CMakeFiles/app.dir/src/app.cpp.o	71ab5b6300a72f4
+0	1175	1688905153420965946	CMakeFiles/app.dir/src/notechart.cpp.o	1d5d071a3cb5e262
+0	2065	1688905154307769571	CMakeFiles/app.dir/src/canvas.cpp.o	84724de9d11c970b
+2069	2238	1688905154488171427	app	7023d1fc12e35681

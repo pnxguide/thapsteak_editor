@@ -6,6 +6,7 @@
 ## Requirements
 - `fmt`
 - `nlohmann-json`
+- `wx`
 
 ## Executing the program
 ```
