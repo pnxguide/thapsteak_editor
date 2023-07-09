@@ -10,12 +10,15 @@ set(wxWidgets_CONFIG_EXECUTABLE /Users/pnx/Documents/Project/Thapsteak/wxWidgets
 find_package(wxWidgets REQUIRED COMPONENTS net core base)
 include(${wxWidgets_USE_FILE})
 
-find_package(fmt)
+find_package(nlohmann_json 3.2.0 REQUIRED)
+find_package(fmt REQUIRED)
 
 add_executable(app src/app.cpp src/notechart.cpp src/canvas.cpp)
 include_directories(
     app
     PUBLIC
     src/include/)
+
 target_link_libraries(app ${wxWidgets_LIBRARIES})
 target_link_libraries(app fmt::fmt)
+target_link_libraries(app nlohmann_json::nlohmann_json)

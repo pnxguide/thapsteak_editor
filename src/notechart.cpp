@@ -16,14 +16,24 @@ void Notechart::update() { this->updated = false; }
 
 void Notechart::modify() { this->updated = true; }
 
-void Notechart::add_note(Note note) {
-    // Remove -1 notes
-    this->notes.erase(std::remove_if(this->notes.begin(), this->notes.end(),
-                                     [note](const std::shared_ptr<Note> &n) {
-                                         return n->is_deleted;
-                                     }),
-                      this->notes.end());
+bool Notechart::is_same_lane_group(std::shared_ptr<Note> a,
+                                   std::shared_ptr<Note> b) {
+    if (a->lane >= 3 && a->lane <= 7) {
+        return b->lane >= 3 && b->lane <= 7;
+    }
 
+    else if (a->lane >= 9 && a->lane <= 12) {
+        return b->lane >= 9 && b->lane <= 12;
+    }
+
+    else if (a->lane >= 14 && a->lane <= 16) {
+        return b->lane >= 14 && b->lane <= 16;
+    }
+
+    return false;
+}
+
+void Notechart::add_note(Note note) {
     // Deduplicate
     if (std::find_if(this->notes.begin(), this->notes.end(),
                      [note](const std::shared_ptr<Note> &n) {

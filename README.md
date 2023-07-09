@@ -3,6 +3,10 @@
 ## Screenshot
 <img src="/img/Screenshot.png" />
 
+## Requirements
+- `fmt`
+- `nlohmann-json`
+
 ## Executing the program
 ```
 mkdir build

@@ -1,6 +1,6 @@
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <string>
 
 enum Direction {
     DIR_NONE = -1,
@@ -11,7 +11,8 @@ enum Direction {
     DIR_LEFT = 180
 };
 enum Side { SIDE_NONE, SIDE_LEFT, SIDE_RIGHT };
-const std::vector<std::string> side_text{ "SIDE_NONE", "SIDE_LEFT", "SIDE_RIGHT" };
+const std::vector<std::string> side_text{"SIDE_NONE", "SIDE_LEFT",
+                                         "SIDE_RIGHT"};
 
 enum Lane {
     LANE_BPM = 1,
@@ -39,8 +40,6 @@ class Note {
     bool is_longnote{false};
     float value;
 
-    bool is_deleted{false};
-
     Note(long _tick, Lane _lane, Direction _direction, Side _side,
          bool _is_longnote);
 };
@@ -54,6 +53,8 @@ class Notechart {
 
     std::vector<std::shared_ptr<Note>> notes;
     std::unordered_map<int, std::shared_ptr<Note>> note_index;
+
+    bool is_same_lane_group(std::shared_ptr<Note> a, std::shared_ptr<Note> b);
 
    private:
     int current_sequence{0};

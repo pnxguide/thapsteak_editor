@@ -44,8 +44,6 @@ void Canvas::keyDown(wxKeyEvent &event) {
     wxChar uc = event.GetUnicodeKey();
 
     if (uc != WXK_NONE) {
-        printf("%c\n", uc);
-
         switch (uc) {
             // Change mode
             case 'Q': {
@@ -161,7 +159,12 @@ void Canvas::keyDown(wxKeyEvent &event) {
         case WXK_BACK:
         case WXK_DELETE: {
             for (int note_id : this->highlighted_notes) {
-                this->chart->note_index[note_id]->is_deleted = true;
+                this->chart->notes.erase(
+                    std::remove_if(this->chart->notes.begin(), this->chart->notes.end(),
+                                   [note_id](const std::shared_ptr<Note> &n) {
+                                       return note_id == n->id;
+                                   }),
+                    this->chart->notes.end());
             }
             break;
         }
@@ -212,7 +215,10 @@ void Canvas::mouseDown(wxMouseEvent &event) {
                 (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
             Note new_note = Note(absolute_ticks_with_granularity,
                                  (Lane)current_mouse_column, DIR_NONE,
-                                 this->current_side, this->is_long_note);
+                                 this->current_side, false);
+
+            new_note.is_longnote =
+                (this->current_side != SIDE_NONE) && this->is_long_note;
 
             if ((Lane)current_mouse_column == LANE_BPM) {
                 wxString prompt = wxGetTextFromUser("BPM", "", "");
@@ -421,13 +427,10 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
     for (int idx = 0; idx < this->chart->notes.size(); idx++) {
         std::shared_ptr<Note> note(this->chart->notes[idx]);
 
-        if (note->is_deleted) {
-            continue;
-        }
-
         int y_position =
             height - ((note->tick - current_tick + (6)) * ROW_SIZE);
-        if (y_position >= 0 && y_position < height) {
+
+        if (y_position + ((ROW_SIZE * 6) + 1) >= 0 && y_position < height) {
             // The bottom line is (current_tick)
             int x_position = note->lane * COL_SIZE;
 
@@ -457,14 +460,6 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                 dc.SetBrush(wxColor(128, 192, 128));
             }
 
-            // Draw LN line
-            if (note->is_longnote) {
-                // Find the previous connector (note with the same side)
-                for (std::shared_ptr<Note> note : this->chart->notes) {
-                    
-                }
-            }
-
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
             dc.DrawRectangle(x_position, y_position, COL_SIZE + 1,
                              (ROW_SIZE * 6) + 1);
@@ -481,12 +476,62 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                         wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
                     dc.SetTextForeground(wxColor(255, 255, 255));
                     dc.DrawText(wxT("DRAG"), x_position, y_position + 3);
+
+                    // Draw LN line
+                    // Find the previous connector (note with the same side)
+                    for (int j = idx - 1; j >= 0; j--) {
+                        std::shared_ptr<Note> prev(this->chart->notes[j]);
+
+                        if (prev->side == note->side &&
+                            this->chart->is_same_lane_group(prev, note)) {
+                            int prev_y_position =
+                                height -
+                                ((prev->tick - current_tick + (6)) * ROW_SIZE);
+                            int prev_x_position = prev->lane * COL_SIZE;
+
+                            dc.SetPen(wxPen(wxColor(128, 128, 128), 5));
+                            dc.DrawLine(
+                                x_position + ((COL_SIZE + 1) / 2),
+                                y_position + (((ROW_SIZE * 6) + 1) / 2),
+                                prev_x_position + ((COL_SIZE + 1) / 2),
+                                prev_y_position + (((ROW_SIZE * 6) + 1) / 2));
+
+                            break;
+                        }
+                    }
+                }
+
+                if (note->side != SIDE_NONE) {
+                    // Check whether the next connector is out-of-screen
+                    for (int j = idx + 1; j < this->chart->notes.size(); j++) {
+                        std::shared_ptr<Note> next(this->chart->notes[j]);
+
+                        if (next->is_longnote && next->side == note->side) {
+                            int next_y_position =
+                                height -
+                                ((next->tick - current_tick + (6)) * ROW_SIZE);
+
+                            if (next_y_position < 0) {
+                                int next_x_position = next->lane * COL_SIZE;
+
+                                dc.SetPen(wxPen(wxColor(128, 128, 128), 5));
+                                dc.DrawLine(
+                                    x_position + ((COL_SIZE + 1) / 2),
+                                    y_position + (((ROW_SIZE * 6) + 1) / 2),
+                                    next_x_position + ((COL_SIZE + 1) / 2),
+                                    next_y_position +
+                                        (((ROW_SIZE * 6) + 1) / 2));
+                            }
+
+                            break;
+                        }
+                    }
                 }
 
                 if (note->direction != DIR_NONE) {
                     dc.SetFont(
                         wxFont{32, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
-                    dc.SetTextForeground(wxColor(255, 255, 255));
+                    dc.SetTextForeground(wxColor(128, 128, 128));
 
                     switch (note->direction) {
                         case DIR_LEFT: {
