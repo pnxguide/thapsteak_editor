@@ -1,3 +1,5 @@
+#include "../include/app.hpp"
+
 #include <wx/wx.h>
 
 #include <algorithm>
@@ -5,9 +7,8 @@
 #include <iostream>
 #include <memory>
 
-#include "../include/app.hpp"
-
 /**
+ * TODO: (Urgent) Flickering screens
  * TODO: Command stacks (for undo-ing)
  * TODO: Auto-play with spacebar
  * TODO: Add music (with single BPM)
@@ -26,7 +27,9 @@ bool App::OnInit() {
     return true;
 }
 
-MyFrame::MyFrame() : wxFrame(NULL, wxID_ANY, "Thapsteak Notecharter", wxPoint(50, 50), wxSize(640, 480)) {
+MyFrame::MyFrame()
+    : wxFrame(NULL, wxID_ANY, "Thapsteak Notecharter", wxPoint(50, 50),
+              wxSize(640, 480)) {
     wxMenu *menuFile = new wxMenu;
     menuFile->Append(wxID_EXIT);
 
