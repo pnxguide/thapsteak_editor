@@ -73,7 +73,7 @@ void Canvas::keyDown(wxKeyEvent &event) {
             }
             // Change row size
             case ']': {
-                if (this->current_row_size < 4) {
+                if (this->current_row_size < 8) {
                     this->current_row_size++;
                 }
                 break;
@@ -371,8 +371,11 @@ void Canvas::mouseUp(wxMouseEvent &event) {
 void Canvas::mouseWheel(wxMouseEvent &event) {
     wxPaintDC dc(this);
 
-    this->current_tick_double += event.GetWheelRotation();
-    if (this->current_tick_double < 0) this->current_tick_double = 0;
+    if (event.GetWheelRotation() != 0) {
+        this->is_autoplay = false;
+        this->current_tick_double += event.GetWheelRotation();
+        if (this->current_tick_double < 0) this->current_tick_double = 0;
+    }
 }
 
 void Canvas::paintEvent(wxPaintEvent &evt) {
@@ -400,7 +403,7 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
     // Scroll
     int current_tick = (int)current_tick_double;
-    
+
     if (this->is_autoplay) {
         current_tick_double++;
     }
@@ -678,29 +681,44 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                     switch (note->direction) {
                         case DIR_LEFT: {
                             dc.DrawRotatedText(wxT("➔"), x_position + 24,
-                                               y_position + 18,
-                                               note->direction);
+                                               y_position - 9,
+                                               180 - note->direction);
+                            // dc.DrawRotatedText(wxT("➔"), x_position + 24,
+                            //                    y_position + 18,
+                            //                    note->direction);
                             break;
                         }
                         case DIR_ULEFT: {
-                            dc.DrawRotatedText(wxT("➔"), x_position + 17,
-                                               y_position + 17,
-                                               note->direction);
+                            dc.DrawRotatedText(wxT("➔"), x_position + 15,
+                                               y_position - 2,
+                                               180 - note->direction);
+                            // dc.DrawRotatedText(wxT("➔"), x_position + 17,
+                            //                    y_position + 17,
+                            //                    note->direction);
                             break;
                         }
                         case DIR_UP: {
                             dc.DrawRotatedText(wxT("➔"), x_position + 10,
-                                               y_position + 8, note->direction);
+                                               y_position + 8,
+                                               180 - note->direction);
                             break;
                         }
                         case DIR_URIGHT: {
-                            dc.DrawRotatedText(wxT("➔"), x_position + 15,
-                                               y_position - 2, note->direction);
+                            dc.DrawRotatedText(wxT("➔"), x_position + 17,
+                                               y_position + 17,
+                                               180 - note->direction);
+                            // dc.DrawRotatedText(wxT("➔"), x_position + 15,
+                            //                    y_position - 2,
+                            //                    note->direction);
                             break;
                         }
                         case DIR_RIGHT: {
                             dc.DrawRotatedText(wxT("➔"), x_position + 24,
-                                               y_position - 9, note->direction);
+                                               y_position + 18,
+                                               180 - note->direction);
+                            // dc.DrawRotatedText(wxT("➔"), x_position + 24,
+                            //                    y_position - 9,
+                            //                    note->direction);
                             break;
                         }
                     }
