@@ -5,6 +5,7 @@ project(
     LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(wxWidgets_CONFIG_EXECUTABLE /Users/pnx/Documents/Project/Thapsteak/wxWidgets-3.2.1/build-cocoa-debug/wx-config)
 find_package(wxWidgets REQUIRED COMPONENTS net core base)
