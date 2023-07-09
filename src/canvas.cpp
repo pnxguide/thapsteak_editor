@@ -292,6 +292,11 @@ void Canvas::keyDown(wxKeyEvent &event) {
             this->is_long_note = true;
             break;
         }
+        // Autoplay
+        case WXK_SPACE: {
+            this->is_autoplay = !this->is_autoplay;
+            break;
+        }
     }
 }
 
@@ -395,6 +400,10 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
     // Scroll
     int current_tick = (int)current_tick_double;
+    
+    if (this->is_autoplay) {
+        current_tick_double++;
+    }
 
     // Clear the previous frame
     dc.SetBackground(*wxWHITE_BRUSH);

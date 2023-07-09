@@ -39,6 +39,8 @@ class Canvas : public wxPanel {
 
     bool is_long_note{false};
 
+    bool is_autoplay{false};
+
     std::chrono::time_point<std::chrono::steady_clock> latest_update_time;
 
     DECLARE_EVENT_TABLE()
