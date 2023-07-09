@@ -20,6 +20,7 @@ class Canvas : public wxPanel {
     void mouseMove(wxMouseEvent &event);
     void mouseWheel(wxMouseEvent &event);
     void keyDown(wxKeyEvent &event);
+    void keyUp(wxKeyEvent &event);
 
     std::unique_ptr<Notechart> chart;
 
@@ -32,6 +33,10 @@ class Canvas : public wxPanel {
 
     int current_x{0}, current_y{0};
     double current_tick_double{12.0};
+
+    Side current_side{SIDE_NONE};
+
+    bool is_long_note{false};
 
     std::chrono::time_point<std::chrono::steady_clock> latest_update_time;
 

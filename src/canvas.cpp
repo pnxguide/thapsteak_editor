@@ -18,6 +18,7 @@ EVT_LEFT_DOWN(Canvas::mouseDown)
 EVT_LEFT_UP(Canvas::mouseUp)
 EVT_MOUSEWHEEL(Canvas::mouseWheel)
 EVT_KEY_DOWN(Canvas::keyDown)
+EVT_KEY_UP(Canvas::keyUp)
 EVT_PAINT(Canvas::paintEvent)
 END_EVENT_TABLE()
 
@@ -41,6 +42,7 @@ void Canvas::mouseMove(wxMouseEvent &event) {
 
 void Canvas::keyDown(wxKeyEvent &event) {
     wxChar uc = event.GetUnicodeKey();
+
     if (uc != WXK_NONE) {
         printf("%c\n", uc);
 
@@ -77,11 +79,111 @@ void Canvas::keyDown(wxKeyEvent &event) {
             // Flick
             case 'Z': {
                 for (int note_id : this->highlighted_notes) {
-                    std::shared_ptr<Note> ptr_to_note = this->chart->note_index[note_id];
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
                     ptr_to_note->direction = DIR_LEFT;
-                    printf("%p %d %d\n", ptr_to_note.get(), ptr_to_note->id, ptr_to_note->direction);
                 }
+                break;
             }
+            case 'X': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->direction = DIR_ULEFT;
+                }
+                break;
+            }
+            case 'C': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->direction = DIR_UP;
+                }
+                break;
+            }
+            case 'V': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->direction = DIR_URIGHT;
+                }
+                break;
+            }
+            case 'B': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->direction = DIR_RIGHT;
+                }
+                break;
+            }
+            case 'N': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->direction = DIR_NONE;
+                }
+                break;
+            }
+            // Side
+            case ',': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->side = SIDE_NONE;
+                }
+                this->current_side = SIDE_NONE;
+                break;
+            }
+            case '.': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->side = SIDE_LEFT;
+                }
+                this->current_side = SIDE_LEFT;
+                break;
+            }
+            case '/': {
+                for (int note_id : this->highlighted_notes) {
+                    std::shared_ptr<Note> ptr_to_note =
+                        this->chart->note_index[note_id];
+                    ptr_to_note->side = SIDE_RIGHT;
+                }
+                this->current_side = SIDE_RIGHT;
+                break;
+            }
+        }
+    }
+
+    switch (event.GetKeyCode()) {
+        // Delete notes
+        case WXK_BACK:
+        case WXK_DELETE: {
+            for (int note_id : this->highlighted_notes) {
+                this->chart->note_index[note_id]->is_deleted = true;
+            }
+            break;
+        }
+        // Long note
+        case WXK_SHIFT: {
+            this->is_long_note = true;
+            break;
+        }
+    }
+}
+
+void Canvas::keyUp(wxKeyEvent &event) {
+    wxChar uc = event.GetUnicodeKey();
+
+    if (uc != WXK_NONE) {
+    }
+
+    switch (event.GetKeyCode()) {
+        // Long note
+        case WXK_SHIFT: {
+            this->is_long_note = false;
+            break;
         }
     }
 }
@@ -108,9 +210,9 @@ void Canvas::mouseDown(wxMouseEvent &event) {
                 (height - this->current_y) / ROW_SIZE + current_tick;
             int absolute_ticks_with_granularity =
                 (absolute_ticks / cell_range_in_ticks) * cell_range_in_ticks;
-            Note new_note =
-                Note(absolute_ticks_with_granularity,
-                     (Lane)current_mouse_column, DIR_NONE, SIDE_NONE, false);
+            Note new_note = Note(absolute_ticks_with_granularity,
+                                 (Lane)current_mouse_column, DIR_NONE,
+                                 this->current_side, this->is_long_note);
 
             if ((Lane)current_mouse_column == LANE_BPM) {
                 wxString prompt = wxGetTextFromUser("BPM", "", "");
@@ -118,8 +220,6 @@ void Canvas::mouseDown(wxMouseEvent &event) {
                 float bpm = std::atof(str_prompt.c_str());
                 new_note.value = bpm;
             }
-
-            printf("%p\n", &new_note);
 
             this->chart->add_note(new_note);
         }
@@ -134,9 +234,6 @@ void Canvas::mouseUp(wxMouseEvent &event) {
     if (mode == Mode::MODE_CREATE) {
     } else if (mode == Mode::MODE_POINTER) {
         this->is_highlighted = false;
-        // TODO: Compute all highlighted notes
-        printf("(%d,%d) to (%d,%d)\n", this->highlight_x, this->highlight_y,
-               this->current_x, this->current_y);
     }
 }
 
@@ -321,8 +418,15 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
     }
 
     // Render notes
-    for (std::shared_ptr<Note> note : this->chart->notes) {
-        int y_position = height - ((note->tick - current_tick + (6)) * ROW_SIZE);
+    for (int idx = 0; idx < this->chart->notes.size(); idx++) {
+        std::shared_ptr<Note> note(this->chart->notes[idx]);
+
+        if (note->is_deleted) {
+            continue;
+        }
+
+        int y_position =
+            height - ((note->tick - current_tick + (6)) * ROW_SIZE);
         if (y_position >= 0 && y_position < height) {
             // The bottom line is (current_tick)
             int x_position = note->lane * COL_SIZE;
@@ -343,14 +447,22 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                 dc.SetBrush(wxColor(128, 128, 128));
             }
 
-            if (this->is_highlighted &&
-                x_position > x1 - (COL_SIZE + 1) && x_position < x2 &&
-                y_position > y1 - ((ROW_SIZE * 6) + 1) && y_position < y2) {
+            if (this->is_highlighted && x_position > x1 - (COL_SIZE + 1) &&
+                x_position < x2 && y_position > y1 - ((ROW_SIZE * 6) + 1) &&
+                y_position < y2) {
                 this->highlighted_notes.insert(note->id);
             }
 
             if (this->highlighted_notes.contains(note->id)) {
-                dc.SetBrush(wxColor(192, 128, 128));
+                dc.SetBrush(wxColor(128, 192, 128));
+            }
+
+            // Draw LN line
+            if (note->is_longnote) {
+                // Find the previous connector (note with the same side)
+                for (std::shared_ptr<Note> note : this->chart->notes) {
+                    
+                }
             }
 
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
@@ -364,10 +476,48 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                 dc.DrawText(wxT("" + fmt::format("{:.3f}", note->value)),
                             x_position, y_position + 3);
             } else {
-                dc.SetFont(wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
-                dc.SetTextForeground(wxColor(255, 255, 255));
-                dc.DrawText(wxT("" + fmt::format("{:d} {:d}", note->id, note->direction)),
-                            x_position, y_position + 3);
+                if (note->is_longnote) {
+                    dc.SetFont(
+                        wxFont{12, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
+                    dc.SetTextForeground(wxColor(255, 255, 255));
+                    dc.DrawText(wxT("DRAG"), x_position, y_position + 3);
+                }
+
+                if (note->direction != DIR_NONE) {
+                    dc.SetFont(
+                        wxFont{32, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
+                    dc.SetTextForeground(wxColor(255, 255, 255));
+
+                    switch (note->direction) {
+                        case DIR_LEFT: {
+                            dc.DrawRotatedText(wxT("➔"), x_position + 24,
+                                               y_position + 18,
+                                               note->direction);
+                            break;
+                        }
+                        case DIR_ULEFT: {
+                            dc.DrawRotatedText(wxT("➔"), x_position + 17,
+                                               y_position + 17,
+                                               note->direction);
+                            break;
+                        }
+                        case DIR_UP: {
+                            dc.DrawRotatedText(wxT("➔"), x_position + 10,
+                                               y_position + 8, note->direction);
+                            break;
+                        }
+                        case DIR_URIGHT: {
+                            dc.DrawRotatedText(wxT("➔"), x_position + 15,
+                                               y_position - 2, note->direction);
+                            break;
+                        }
+                        case DIR_RIGHT: {
+                            dc.DrawRotatedText(wxT("➔"), x_position + 24,
+                                               y_position - 9, note->direction);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -407,16 +557,15 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
     dc.SetFont(wxFont{16, wxFONTFAMILY_SWISS, wxNORMAL, wxNORMAL});
     dc.SetTextForeground(wxColor(0, 0, 0));
-    dc.DrawText(wxT("" + fmt::format("Mode: {:<}", ModeStr[mode])), width - 290,
-                20);
-    dc.DrawText(wxT("" + fmt::format("Tick Granularity: {:3d}",
-                                     tick_granularity[tick_granularity_index])),
-                width - 290, 40);
-
-    int index = 0;
-    for (std::shared_ptr<Note> note : this->chart->notes) {
-        dc.DrawText(wxT("" + fmt::format("({:d} : {:d})",
-                                     note->id, note->direction)),
-                width - 290, 60 + 20 * (index++));
-    }
+    dc.DrawText(wxT("" + fmt::format("Mode: {:<}", ModeStr[this->mode])),
+                width - 290, 20);
+    dc.DrawText(
+        wxT("" + fmt::format("Tick Granularity: {:3d}",
+                             tick_granularity[this->tick_granularity_index])),
+        width - 290, 40);
+    dc.DrawText(
+        wxT("" + fmt::format("Side: {:<}", side_text[this->current_side])),
+        width - 290, 60);
+    dc.DrawText(wxT("" + fmt::format("Long Note: {:}", this->is_long_note)),
+                width - 290, 80);
 }

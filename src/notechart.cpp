@@ -17,10 +17,18 @@ void Notechart::update() { this->updated = false; }
 void Notechart::modify() { this->updated = true; }
 
 void Notechart::add_note(Note note) {
+    // Remove -1 notes
+    this->notes.erase(std::remove_if(this->notes.begin(), this->notes.end(),
+                                     [note](const std::shared_ptr<Note> &n) {
+                                         return n->is_deleted;
+                                     }),
+                      this->notes.end());
+
     // Deduplicate
     if (std::find_if(this->notes.begin(), this->notes.end(),
                      [note](const std::shared_ptr<Note> &n) {
-                         return (n->tick == note.tick) && (n->lane == note.lane);
+                         return (n->tick == note.tick) &&
+                                (n->lane == note.lane);
                      }) == this->notes.end()) {
         // Mark as modified
         this->modify();
@@ -33,7 +41,8 @@ void Notechart::add_note(Note note) {
         // Add and organize new note
         this->notes.push_back(this->note_index[note.id]);
         std::sort(this->notes.begin(), this->notes.end(),
-                  [](const std::shared_ptr<Note> &lhs, const std::shared_ptr<Note> &rhs) {
+                  [](const std::shared_ptr<Note> &lhs,
+                     const std::shared_ptr<Note> &rhs) {
                       return lhs->tick < rhs->tick;
                   });
     }

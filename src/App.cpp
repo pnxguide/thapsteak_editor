@@ -8,12 +8,9 @@
 #include "../include/app.hpp"
 
 /**
- * TODO: Flick
- * TODO: Long Note
- * TODO: Right-click to remove a note
+ * TODO: Visualize flicks
+ * TODO: Visualize long notes
  * TODO: Command stacks (for undo-ing)
- * TODO: Set BPM
- * TODO: Set granularity
  * TODO: Import/Export charts
  * TODO: Auto-play with spacebar
  * TODO: Add music (with single BPM)

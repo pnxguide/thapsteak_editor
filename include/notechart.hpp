@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 enum Direction {
     DIR_NONE = -1,
@@ -10,6 +11,8 @@ enum Direction {
     DIR_LEFT = 180
 };
 enum Side { SIDE_NONE, SIDE_LEFT, SIDE_RIGHT };
+const std::vector<std::string> side_text{ "SIDE_NONE", "SIDE_LEFT", "SIDE_RIGHT" };
+
 enum Lane {
     LANE_BPM = 1,
     LANE_H1 = 3,
@@ -29,13 +32,14 @@ enum Lane {
 class Note {
    public:
     long id;
-
     long tick;
     Lane lane;
     Direction direction{DIR_NONE};
     Side side{SIDE_NONE};
     bool is_longnote{false};
     float value;
+
+    bool is_deleted{false};
 
     Note(long _tick, Lane _lane, Direction _direction, Side _side,
          bool _is_longnote);
