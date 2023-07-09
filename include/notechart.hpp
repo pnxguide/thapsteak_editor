@@ -15,6 +15,7 @@ const std::vector<std::string> side_text{"SIDE_NONE", "SIDE_LEFT",
                                          "SIDE_RIGHT"};
 
 enum Lane {
+    LANE_NONE = 0,
     LANE_BPM = 1,
     LANE_H1 = 3,
     LANE_H2 = 4,

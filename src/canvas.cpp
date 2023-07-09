@@ -3,6 +3,10 @@
 #include <fmt/format.h>
 #include <wx/numdlg.h>
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 constexpr int COL_SIZE = 48;
 constexpr int ROW_SIZE = 3;
 
@@ -151,6 +155,87 @@ void Canvas::keyDown(wxKeyEvent &event) {
                 this->current_side = SIDE_RIGHT;
                 break;
             }
+            // Import
+            case 'I': {
+                wxFileDialog import_dialog(
+                    this, _("Import JSON"), "", "",
+                    "Thapsteak files (*.thapsteak)|*.thapsteak",
+                    wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+                if (import_dialog.ShowModal() == wxID_CANCEL) {
+                    break;
+                }
+
+                std::string file_path(import_dialog.GetPath());
+                std::FILE *imported_file = std::fopen(file_path.c_str(), "rb");
+                std::fseek(imported_file, 0, SEEK_END);
+                long imported_file_size = std::ftell(imported_file);
+
+                std::string buffer;
+                buffer.resize(imported_file_size);
+
+                std::rewind(imported_file);
+                std::fread(buffer.data(), sizeof(uint32_t), imported_file_size,
+                           imported_file);
+
+                this->chart->notes.clear();
+
+                json data = json::parse(buffer);
+                for (auto &e : data["events"]) {
+                    Note new_note(0, LANE_NONE, DIR_NONE, SIDE_NONE, false);
+
+                    for (auto &[key, value] : e.items()) {
+                        if (key == "row") {
+                            new_note.tick = value;
+                        } else if (key == "channel") {
+                            if (value == "BPM") {
+                                new_note.lane = LANE_BPM;
+                            } else if (value == "H1") {
+                                new_note.lane = LANE_H1;
+                            } else if (value == "H2") {
+                                new_note.lane = LANE_H2;
+                            } else if (value == "H3") {
+                                new_note.lane = LANE_H3;
+                            } else if (value == "H4") {
+                                new_note.lane = LANE_H4;
+                            } else if (value == "H5") {
+                                new_note.lane = LANE_H5;
+                            } else if (value == "N1") {
+                                new_note.lane = LANE_N1;
+                            } else if (value == "N2") {
+                                new_note.lane = LANE_N2;
+                            } else if (value == "N3") {
+                                new_note.lane = LANE_N3;
+                            } else if (value == "N4") {
+                                new_note.lane = LANE_N4;
+                            } else if (value == "E1") {
+                                new_note.lane = LANE_E1;
+                            } else if (value == "E2") {
+                                new_note.lane = LANE_E2;
+                            } else if (value == "E3") {
+                                new_note.lane = LANE_E3;
+                            }
+                        } else if (key == "longNote") {
+                            new_note.is_longnote = value;
+                        } else if (key == "angle") {
+                            new_note.direction = value;
+                        } else if (key == "side") {
+                            if (value == "left") {
+                                new_note.side = SIDE_LEFT;
+                            } else if (value == "right") {
+                                new_note.side = SIDE_RIGHT;
+                            }
+                        } else if (key == "value") {
+                            new_note.value = value;
+                        }
+                    }
+
+                    this->chart->add_note(new_note);
+                }
+
+                std::fclose(imported_file);
+                break;
+            }
         }
     }
 
@@ -160,7 +245,8 @@ void Canvas::keyDown(wxKeyEvent &event) {
         case WXK_DELETE: {
             for (int note_id : this->highlighted_notes) {
                 this->chart->notes.erase(
-                    std::remove_if(this->chart->notes.begin(), this->chart->notes.end(),
+                    std::remove_if(this->chart->notes.begin(),
+                                   this->chart->notes.end(),
                                    [note_id](const std::shared_ptr<Note> &n) {
                                        return note_id == n->id;
                                    }),
@@ -506,21 +592,25 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                     for (int j = idx + 1; j < this->chart->notes.size(); j++) {
                         std::shared_ptr<Note> next(this->chart->notes[j]);
 
-                        if (next->is_longnote && next->side == note->side) {
-                            int next_y_position =
-                                height -
-                                ((next->tick - current_tick + (6)) * ROW_SIZE);
+                        if (next->side == note->side &&
+                            this->chart->is_same_lane_group(next, note)) {
+                            if (next->is_longnote) {
+                                int next_y_position =
+                                    height -
+                                    ((next->tick - current_tick + (6)) *
+                                     ROW_SIZE);
 
-                            if (next_y_position < 0) {
-                                int next_x_position = next->lane * COL_SIZE;
+                                if (next_y_position < 0) {
+                                    int next_x_position = next->lane * COL_SIZE;
 
-                                dc.SetPen(wxPen(wxColor(128, 128, 128), 5));
-                                dc.DrawLine(
-                                    x_position + ((COL_SIZE + 1) / 2),
-                                    y_position + (((ROW_SIZE * 6) + 1) / 2),
-                                    next_x_position + ((COL_SIZE + 1) / 2),
-                                    next_y_position +
-                                        (((ROW_SIZE * 6) + 1) / 2));
+                                    dc.SetPen(wxPen(wxColor(128, 128, 128), 5));
+                                    dc.DrawLine(
+                                        x_position + ((COL_SIZE + 1) / 2),
+                                        y_position + (((ROW_SIZE * 6) + 1) / 2),
+                                        next_x_position + ((COL_SIZE + 1) / 2),
+                                        next_y_position +
+                                            (((ROW_SIZE * 6) + 1) / 2));
+                                }
                             }
 
                             break;
