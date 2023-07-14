@@ -19,6 +19,7 @@ include_directories(
     app
     PUBLIC
     src/include/)
+include_directories(app PRIVATE third_party)
 
 target_link_libraries(app ${wxWidgets_LIBRARIES})
 target_link_libraries(app fmt::fmt)

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <set>
 
+#include "../third_party/miniaudio.h"
 #include "notechart.hpp"
 
 enum Mode { MODE_POINTER, MODE_CREATE };
@@ -24,6 +25,12 @@ class Canvas : public wxPanel {
     void keyDown(wxKeyEvent &event);
     void keyUp(wxKeyEvent &event);
 
+    ma_engine_config engine_config{NULL};
+    ma_engine engine{NULL};
+    ma_sound sound{NULL};
+    double offset{1.51};
+    double BPM{116};
+
     std::unique_ptr<Notechart> chart;
 
     bool is_highlighted{false};
@@ -42,6 +49,8 @@ class Canvas : public wxPanel {
     bool is_long_note{false};
 
     bool is_autoplay{false};
+
+    bool is_init{false};
 
     wxCoord width, height;
 

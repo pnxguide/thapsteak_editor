@@ -1,9 +1,12 @@
+#define MINIAUDIO_IMPLEMENTATION
 #include "../include/canvas.hpp"
 
 #include <fmt/format.h>
 #include <wx/numdlg.h>
 
 #include <nlohmann/json.hpp>
+
+#include "../third_party/miniaudio.h"
 
 using json = nlohmann::json;
 
@@ -34,6 +37,27 @@ std::vector<int> tick_granularity = {1,  2,  4,  6,  8,  12, 16,
 
 Canvas::Canvas(wxFrame *parent) : wxPanel(parent) {
     this->chart = std::make_unique<Notechart>();
+    this->current_tick_double = 0;
+
+    ma_result result;
+
+    engine_config = ma_engine_config_init();
+
+    result = ma_engine_init(&engine_config, &engine);
+    if (result != MA_SUCCESS) {
+        return;
+    }
+
+    result = ma_sound_init_from_file(
+        &engine,
+        "/Users/pnx/Documents/Project/Thapsteak/thapsteak_editor/audio/"
+        "story_to_gaslight_your_child.mp3",
+        0, NULL, NULL, &sound);
+    if (result != MA_SUCCESS) {
+        return;
+    }
+
+    this->is_init = true;
 }
 
 void Canvas::mouseMove(wxMouseEvent &event) {
@@ -292,6 +316,27 @@ void Canvas::keyDown(wxKeyEvent &event) {
         // Autoplay
         case WXK_SPACE: {
             this->is_autoplay = !this->is_autoplay;
+
+            if (this->is_autoplay) {
+                // Play audio
+                double beats = this->current_tick_double / 192 * 4;
+                double milliseconds = (beats * 60.0 * 1000.0) / this->BPM;
+                milliseconds -= offset * 1000.0;
+
+                unsigned int sample_rate = ma_engine_get_sample_rate(&engine);
+                double fpms = (double)sample_rate / (double)1000.0;
+
+                ma_sound_seek_to_pcm_frame(&sound, (int)(fpms * milliseconds));
+
+                // float seconds = 0.0;
+                // ma_sound_get_cursor_in_seconds(&sound, &seconds);
+                // printf("%f %f\n", milliseconds / 1000.0, seconds);
+
+                ma_sound_start(&sound);
+            } else {
+                ma_sound_stop(&sound);
+            }
+
             break;
         }
     }
@@ -361,6 +406,7 @@ void Canvas::mouseUp(wxMouseEvent &event) {
 void Canvas::mouseWheel(wxMouseEvent &event) {
     if (event.GetWheelRotation() != 0) {
         this->is_autoplay = false;
+        ma_sound_stop(&sound);
         this->current_tick_double += event.GetWheelRotation();
         if (this->current_tick_double < 0) this->current_tick_double = 0;
     }
@@ -368,9 +414,7 @@ void Canvas::mouseWheel(wxMouseEvent &event) {
 
 void Canvas::paintEvent(wxPaintEvent &evt) {
     wxPaintDC dc(this);
-
     dc.GetSize(&(this->width), &(this->height));
-
     render(dc);
 }
 
@@ -394,10 +438,6 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
     // Scroll
     int current_tick = (int)current_tick_double;
-
-    if (this->is_autoplay) {
-        current_tick_double++;
-    }
 
     // Clear the previous frame
     dc.SetBackground(*wxWHITE_BRUSH);
@@ -435,79 +475,79 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
 
         if (tick_granularity[tick_granularity_index] % 192 == 0) {
             if ((height - y) % (this->current_row_size) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 255, 0, 127), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 96 == 0) {
             if ((height - y) % (this->current_row_size * 2) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 255, 0, 127), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 64 == 0) {
             if ((height - y) % (this->current_row_size * 3) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 127), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 48 == 0) {
             if ((height - y) % (this->current_row_size * 4) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 127), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 32 == 0) {
             if ((height - y) % (this->current_row_size * 6) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 24 == 0) {
             if ((height - y) % (this->current_row_size * 8) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 16 == 0) {
             if ((height - y) % (this->current_row_size * 12) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 12 == 0) {
             if ((height - y) % (this->current_row_size * 16) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 1));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 8 == 0) {
             if ((height - y) % (this->current_row_size * 24) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 2));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 6 == 0) {
             if ((height - y) % (this->current_row_size * 32) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 2));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 4 == 0) {
             if ((height - y) % (this->current_row_size * 48) == 0) {
-                dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 0, 255, 255), 3));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 2 == 0) {
             if ((height - y) % (this->current_row_size * 96) == 0) {
-                dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(0, 255, 0, 255), 3));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
         if (tick_granularity[tick_granularity_index] % 1 == 0) {
             if ((height - y) % (this->current_row_size * 192) == 0) {
-                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 1));
+                dc.SetPen(wxPen(wxColor(255, 0, 0, 255), 4));
                 dc.DrawLine(0, screen_y, width, screen_y);
             }
         }
@@ -716,7 +756,19 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
         if (std::find(drawable_x_cells.begin(), drawable_x_cells.end(),
                       current_mouse_column) != drawable_x_cells.end()) {
             dc.SetPen(wxPen(wxColor(128, 128, 128), 1));
-            dc.SetBrush(wxColor(224, 224, 224, 127));
+
+            // Note color
+            switch (this->current_side) {
+                case SIDE_LEFT:
+                    dc.SetBrush(wxColor(255, 191, 191, 127));
+                    break;
+                case SIDE_RIGHT:
+                    dc.SetBrush(wxColor(191, 191, 255, 127));
+                    break;
+                default:
+                    dc.SetBrush(wxColor(191, 191, 191, 127));
+            }
+
             // Calculate y-position of the hovered note
             //  - make it stick with the highest lower line
             dc.DrawRectangle(current_mouse_column * COL_SIZE,
@@ -752,4 +804,28 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
         width - 290, 60);
     dc.DrawText(wxT("" + fmt::format("Row Size: {:d}", this->current_row_size)),
                 width - 290, 80);
+
+    // Compute time
+    double beats = this->current_tick_double / 192 * 4;
+    int milliseconds = (int)((1.0 / this->BPM) * beats * 60.0 * 1000.0);
+
+    dc.DrawText(wxT("" + fmt::format("Current Time (ms): {:d}", milliseconds)),
+                width - 290, 100);
+
+    if (this->is_init) {
+        float seconds = 0.0;
+        ma_sound_get_cursor_in_seconds(&sound, &seconds);
+        seconds += offset;
+
+        if (this->is_autoplay) {
+            current_tick_double = ((seconds / 60.0) * this->BPM) * (192.0 / 4.0);
+        }
+
+        dc.DrawText(
+            wxT("" + fmt::format("Current Time (ms): {:d}", (int)(seconds * 1000.0))),
+            width - 290, 120);
+    }
+
+    dc.SetPen(wxPen(wxColor(255, 255, 255, 127), 3));
+    dc.DrawLine(0, height, width, height);
 }
