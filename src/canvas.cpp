@@ -390,9 +390,20 @@ void Canvas::mouseDown(wxMouseEvent &event) {
             this->chart->add_note(new_note);
         }
     } else if (mode == Mode::MODE_POINTER) {
-        this->is_highlighted = true;
-        this->highlight_x = this->current_x;
-        this->highlight_y = this->current_y;
+        bool is_dragging = false;
+        if (this->highlighted_notes.size() == 1) {
+            int note_id = this->highlighted_notes.begin().next();
+            std::shared_ptr<Note> note = this->chart->note_index[note_id];
+
+            // Check if this note is on the mouse cursor?
+            
+        }
+
+        if (!is_dragging) {
+            this->is_highlighted = true;
+            this->highlight_x = this->current_x;
+            this->highlight_y = this->current_y;
+        }
     }
 }
 
@@ -818,12 +829,13 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
         seconds += offset;
 
         if (this->is_autoplay) {
-            current_tick_double = ((seconds / 60.0) * this->BPM) * (192.0 / 4.0);
+            current_tick_double =
+                ((seconds / 60.0) * this->BPM) * (192.0 / 4.0);
         }
 
-        dc.DrawText(
-            wxT("" + fmt::format("Current Time (ms): {:d}", (int)(seconds * 1000.0))),
-            width - 290, 120);
+        dc.DrawText(wxT("" + fmt::format("Current Time (ms): {:d}",
+                                         (int)(seconds * 1000.0))),
+                    width - 290, 120);
     }
 
     dc.SetPen(wxPen(wxColor(255, 255, 255, 127), 3));

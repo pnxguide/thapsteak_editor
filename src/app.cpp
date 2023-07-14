@@ -10,9 +10,8 @@
 /**
  * TODO: (Urgent) Flickering screens
  * TODO: Command stacks (for undo-ing)
- * TODO: Auto-play with spacebar
- * TODO: Add music (with single BPM)
  * TODO: Add music (with multiple BPM)
+ * TODO: Drag existing notes
  */
 
 wxIMPLEMENT_APP(App);
