@@ -2,6 +2,7 @@
 #include "../include/canvas.hpp"
 
 #include <fmt/format.h>
+#include <wx/dcbuffer.h>
 #include <wx/numdlg.h>
 
 #include <nlohmann/json.hpp>
@@ -15,9 +16,9 @@ constexpr int NOTE_SIZE = 3;
 
 RenderTimer::RenderTimer(Canvas *pane) : wxTimer() { RenderTimer::pane = pane; }
 
-void RenderTimer::Notify() { pane->Refresh(); }
+void RenderTimer::Notify() { pane->Refresh(false); }
 
-void RenderTimer::start() { wxTimer::Start(10); }
+void RenderTimer::start() { wxTimer::Start(16.67); }
 
 BEGIN_EVENT_TABLE(Canvas, wxPanel)
 EVT_MOTION(Canvas::mouseMove)
@@ -39,23 +40,23 @@ Canvas::Canvas(wxFrame *parent) : wxPanel(parent) {
     this->chart = std::make_unique<Notechart>();
     this->current_tick_double = 0;
 
-    ma_result result;
+    // ma_result result;
 
-    engine_config = ma_engine_config_init();
+    // engine_config = ma_engine_config_init();
 
-    result = ma_engine_init(&engine_config, &engine);
-    if (result != MA_SUCCESS) {
-        return;
-    }
+    // result = ma_engine_init(&engine_config, &engine);
+    // if (result != MA_SUCCESS) {
+    //     return;
+    // }
 
-    result = ma_sound_init_from_file(
-        &engine,
-        "/Users/pnx/Documents/Project/Thapsteak/thapsteak_editor/audio/"
-        "story_to_gaslight_your_child.mp3",
-        0, NULL, NULL, &sound);
-    if (result != MA_SUCCESS) {
-        return;
-    }
+    // result = ma_sound_init_from_file(
+    //     &engine,
+    //     "/Users/pnx/Documents/Project/Thapsteak/thapsteak_editor/audio/"
+    //     "audio.mp3",
+    //     0, NULL, NULL, &sound);
+    // if (result != MA_SUCCESS) {
+    //     return;
+    // }
 
     this->is_init = true;
 }
@@ -317,25 +318,25 @@ void Canvas::keyDown(wxKeyEvent &event) {
         case WXK_SPACE: {
             this->is_autoplay = !this->is_autoplay;
 
-            if (this->is_autoplay) {
-                // Play audio
-                double beats = this->current_tick_double / 192 * 4;
-                double milliseconds = (beats * 60.0 * 1000.0) / this->BPM;
-                milliseconds -= offset * 1000.0;
+            // if (this->is_autoplay) {
+            //     // Play audio
+            //     double beats = this->current_tick_double / 192 * 4;
+            //     double milliseconds = (beats * 60.0 * 1000.0) / this->BPM;
+            //     milliseconds -= offset * 1000.0;
 
-                unsigned int sample_rate = ma_engine_get_sample_rate(&engine);
-                double fpms = (double)sample_rate / (double)1000.0;
+            //     unsigned int sample_rate = ma_engine_get_sample_rate(&engine);
+            //     double fpms = (double)sample_rate / (double)1000.0;
 
-                ma_sound_seek_to_pcm_frame(&sound, (int)(fpms * milliseconds));
+            //     ma_sound_seek_to_pcm_frame(&sound, (int)(fpms * milliseconds));
 
-                // float seconds = 0.0;
-                // ma_sound_get_cursor_in_seconds(&sound, &seconds);
-                // printf("%f %f\n", milliseconds / 1000.0, seconds);
+            //     // float seconds = 0.0;
+            //     // ma_sound_get_cursor_in_seconds(&sound, &seconds);
+            //     // printf("%f %f\n", milliseconds / 1000.0, seconds);
 
-                ma_sound_start(&sound);
-            } else {
-                ma_sound_stop(&sound);
-            }
+            //     ma_sound_start(&sound);
+            // } else {
+            //     ma_sound_stop(&sound);
+            // }
 
             break;
         }
@@ -392,11 +393,10 @@ void Canvas::mouseDown(wxMouseEvent &event) {
     } else if (mode == Mode::MODE_POINTER) {
         bool is_dragging = false;
         if (this->highlighted_notes.size() == 1) {
-            int note_id = this->highlighted_notes.begin().next();
-            std::shared_ptr<Note> note = this->chart->note_index[note_id];
+            // int note_id = this->highlighted_notes.begin().next();
+            // std::shared_ptr<Note> note = this->chart->note_index[note_id];
 
             // Check if this note is on the mouse cursor?
-            
         }
 
         if (!is_dragging) {
@@ -417,7 +417,7 @@ void Canvas::mouseUp(wxMouseEvent &event) {
 void Canvas::mouseWheel(wxMouseEvent &event) {
     if (event.GetWheelRotation() != 0) {
         this->is_autoplay = false;
-        ma_sound_stop(&sound);
+        // ma_sound_stop(&sound);
         this->current_tick_double += event.GetWheelRotation();
         if (this->current_tick_double < 0) this->current_tick_double = 0;
     }
@@ -824,18 +824,22 @@ void Canvas::update_frame(wxDC &dc, double delta_time) {
                 width - 290, 100);
 
     if (this->is_init) {
-        float seconds = 0.0;
-        ma_sound_get_cursor_in_seconds(&sound, &seconds);
-        seconds += offset;
+        // float seconds = 0.0;
+        // ma_sound_get_cursor_in_seconds(&sound, &seconds);
+        // seconds += offset;
+
+        // if (this->is_autoplay) {
+        //     current_tick_double =
+        //         ((seconds / 60.0) * this->BPM) * (192.0 / 4.0);
+        // }
+
+        // dc.DrawText(wxT("" + fmt::format("Current Time (ms): {:d}",
+        //                                  (int)(seconds * 1000.0))),
+        //             width - 290, 120);
 
         if (this->is_autoplay) {
-            current_tick_double =
-                ((seconds / 60.0) * this->BPM) * (192.0 / 4.0);
+            current_tick_double += 1.0;
         }
-
-        dc.DrawText(wxT("" + fmt::format("Current Time (ms): {:d}",
-                                         (int)(seconds * 1000.0))),
-                    width - 290, 120);
     }
 
     dc.SetPen(wxPen(wxColor(255, 255, 255, 127), 3));

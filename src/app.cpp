@@ -1,6 +1,7 @@
 #include "../include/app.hpp"
 
 #include <wx/wx.h>
+#include <wx/window.h>
 
 #include <algorithm>
 #include <chrono>

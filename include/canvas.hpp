@@ -28,8 +28,8 @@ class Canvas : public wxPanel {
     ma_engine_config engine_config{NULL};
     ma_engine engine{NULL};
     ma_sound sound{NULL};
-    double offset{1.51};
-    double BPM{116};
+    double offset{-0.82};
+    double BPM{140};
 
     std::unique_ptr<Notechart> chart;
 
@@ -51,6 +51,8 @@ class Canvas : public wxPanel {
     bool is_autoplay{false};
 
     bool is_init{false};
+
+    bool is_background_drawn{false};
 
     wxCoord width, height;
 
